@@ -30,11 +30,7 @@ module.exports = merge(base, {
           <meta name="viewport" content="width=device-width, initial-scale=1.0">          
           <title>WaveForm</title>
           <base href="/">                    
-        </head>
-        <script defer src="wavesurfer.min.js"></script>
-        <script defer src="wavesurfer.timeline.min.js"></script>
-        <script defer src="wavesurfer.regions.min.js"></script>
-        <script defer src="wavesurfer.cursor.min.js"></script>        
+        </head>      
         <body style="margin: 0; padding: 0; width: 100%; height: 100%;"> 
           <div id="app">
                    
