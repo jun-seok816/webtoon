@@ -1,13 +1,105 @@
+import { Loading } from "@jsLib/class/Loading";
+import { ImageItem, Upload } from "@jsLib/class/Upload";
 import React from "react";
 import "./WebtoonUplaod.scss";
 
-export default function WebtoonUploadPage() {
+export default function WebtoonUploadPage(props: {
+  lv_Obj: Upload;
+  Loading: Loading;
+}) {
+  async function makeThumbnail(file: File, maxSide = 2000): Promise<Blob> {
+    const bmp = await createImageBitmap(file);
+    let { width, height } = bmp;
+    const scale = Math.min(1, maxSide / Math.max(width, height));
+    if (scale < 1) {
+      width = Math.round(width * scale);
+      height = Math.round(height * scale);
+    }
+
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d")!;
+    ctx.drawImage(bmp, 0, 0, width, height);
+    const blob: Blob = await new Promise(
+      (res) => canvas.toBlob((b) => res(b!), "image/jpeg", 0.85)!
+    );
+    bmp.close();
+    return blob;
+  }
+
+  async function AddFiles(files: File[]) {
+    const total = files.filter((f) => f.type.startsWith("image/")).length;
+    let completed = 0;
+    props.Loading.is_loading = true;
+    props.lv_Obj.im_forceRender();
+    try {
+      const next = await Promise.all(
+        files
+          .filter((f) => f.type.startsWith("image/"))
+          .map((file, i) => {
+            return new Promise<ImageItem>((resolve, reject) => {
+              const id =
+                globalThis.crypto?.randomUUID?.() ??
+                `${Date.now()}-${Math.random()}-${i}`;
+
+              const fr = new FileReader();
+
+              fr.onprogress = (e) => {
+                if (e.lengthComputable) {
+                  const percent = Math.round((e.loaded / e.total) * 100);
+                  if (total === 1) {
+                    props.Loading.iv_per = percent;
+                    props.Loading.im_forceRender();
+                  }
+                  console.log(`${file.name} 읽는 중: ${percent}%`);
+                }
+              };
+
+              fr.onload = async () => {
+                completed++;
+                console.log(`진행도: ${completed}/${total} 완료`);
+                props.Loading.iv_per = completed / total;
+                props.Loading.im_forceRender();
+                const thumbBlob = await makeThumbnail(file);
+                const previewUrl = URL.createObjectURL(thumbBlob);
+                resolve({
+                  id,
+                  file,
+                  previewUrl: previewUrl,
+                  name: file.name,
+                  size: file.size,
+                  type: file.type,
+                });
+              };
+
+              fr.onerror = reject;
+
+              fr.readAsDataURL(file);
+            });
+          })
+      );
+      props.lv_Obj.pt_items = [...props.lv_Obj.pt_items, ...next];
+    } catch (err) {
+      console.log(err);
+    } finally {
+      props.Loading.iv_per = 0;
+      props.Loading.is_loading = false;
+      props.lv_Obj.im_forceRender();
+    }
+  }
+
+  const onSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files ? Array.from(e.target.files) : [];
+    if (files.length) AddFiles(files);
+    e.target.value = "";
+  };
   return (
     <div className="webtoon-upload">
       <header className="webtoon-upload__header" role="banner">
         <h1 className="webtoon-upload__title">웹툰 이미지 업로드</h1>
 
-        <div className="webtoon-upload__actions">          
+        <div className="webtoon-upload__actions">
           <button type="button" className="btn btn--primary">
             업로드
           </button>
@@ -49,6 +141,7 @@ export default function WebtoonUploadPage() {
               accept="image/*"
               multiple
               aria-label="이미지 파일 선택"
+              onChange={onSelect}
             />
             <label htmlFor="file-input" className="dropzone__surface">
               <span className="dropzone__icon" aria-hidden="true">
@@ -95,90 +188,98 @@ export default function WebtoonUploadPage() {
             페이지 정렬
           </h2>
 
-          <div className="queue">
+          <div className="queue scroll">
             <ul className="queue__list" role="list">
-              {/* 샘플 아이템 (로직 없이 구조만) */}
-              <li className="queue-item" draggable>
-                <div className="queue-item__thumb" aria-hidden="true" />
-                <div className="queue-item__meta">
-                  <div className="queue-item__name">page_001.png</div>
-                  <div className="queue-item__sub">1024×4096 · 1.2MB</div>
-                </div>
-                <div className="queue-item__controls" aria-label="정렬 컨트롤">
-                  <button
-                    type="button"
-                    className="icon-btn"
-                    aria-label="위로 이동"
-                  >
-                    ↑
-                  </button>
-                  <button
-                    type="button"
-                    className="icon-btn"
-                    aria-label="아래로 이동"
-                  >
-                    ↓
-                  </button>
-                  <button type="button" className="icon-btn" aria-label="삭제">
-                    ✕
-                  </button>
-                </div>
-              </li>
-
-              <li className="queue-item" draggable>
-                <div className="queue-item__thumb" aria-hidden="true" />
-                <div className="queue-item__meta">
-                  <div className="queue-item__name">page_002.png</div>
-                  <div className="queue-item__sub">1024×4096 · 1.1MB</div>
-                </div>
-                <div className="queue-item__controls" aria-label="정렬 컨트롤">
-                  <button
-                    type="button"
-                    className="icon-btn"
-                    aria-label="위로 이동"
-                  >
-                    ↑
-                  </button>
-                  <button
-                    type="button"
-                    className="icon-btn"
-                    aria-label="아래로 이동"
-                  >
-                    ↓
-                  </button>
-                  <button type="button" className="icon-btn" aria-label="삭제">
-                    ✕
-                  </button>
-                </div>
-              </li>
+              {props.lv_Obj.pt_items.map((it, idx) => (
+                <li key={it.id} className="queue-item">
+                  <div className="queue-item__thumb">
+                    <img
+                      src={it.previewUrl}
+                      alt={it.name}
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                        borderRadius: 8,
+                      }}
+                    />
+                  </div>
+                  <div className="queue-item__meta">
+                    <div className="queue-item__name">
+                      {String(idx + 1).padStart(3, "0")} · {it.name}
+                    </div>
+                    <div className="queue-item__sub">
+                      {(it.size / 1024 / 1024).toFixed(2)}MB · {it.type}
+                    </div>
+                  </div>
+                  <div className="queue-item__controls">
+                    <button
+                      className="icon-btn"
+                      onClick={() => props.lv_Obj.im_Move(it.id, -1)}
+                    >
+                      ↑
+                    </button>
+                    <button
+                      className="icon-btn"
+                      onClick={() => props.lv_Obj.im_Move(it.id, +1)}
+                    >
+                      ↓
+                    </button>
+                    <button
+                      className="icon-btn"
+                      onClick={() => props.lv_Obj.im_Remove(it.id)}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </li>
+              ))}
             </ul>
           </div>
         </section>
 
-        {/* 사이드바 (미리보기 & 옵션) */}
+        {/* 사이드바 (미리보기) */}
         <aside
           className="panel panel--sidebar"
           aria-labelledby="sidebar-heading"
         >
           <h2 id="sidebar-heading" className="panel__title">
-            미리보기 & 옵션
+            미리보기
           </h2>
 
           <div className="preview">
             <div
-              className="preview__stage"
+              className="preview__stage scroll"
               role="img"
               aria-label="선택한 페이지 미리보기 영역"
             >
-              <div className="preview__placeholder">미리보기</div>
+              {props.lv_Obj.pt_items.length === 0 ? (
+                <>
+                  <div className="preview__placeholder">미리보기</div>
+                </>
+              ) : (
+                <>
+                  {props.lv_Obj.pt_items.map((it, idx) => {
+                    return (
+                      <img
+                        key={`${idx}-image-preivew`}
+                        src={it.previewUrl}
+                        style={{
+                          width: "100%",
+                          objectFit: "contain",
+                        }}
+                      />
+                    );
+                  })}
+                </>
+              )}
             </div>
           </div>
-            
         </aside>
       </main>
 
-      <footer className="webtoon-upload__footer" role="contentinfo">        
-        <div className="footer__right">          
+      <footer className="webtoon-upload__footer" role="contentinfo">
+        <div className="footer__right">
           <button type="button" className="btn btn--primary">
             업로드
           </button>

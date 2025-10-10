@@ -6,12 +6,12 @@ import { ToastContainer, toast } from "react-toastify";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import "react-toastify/dist/ReactToastify.css";
 import "./index.scss";
-import WebtoonUploadPage from "./component/WebtoonUploadPage";
+import { MainPage } from "./component/MainPage";
 
 export default function Root() {
   return (
     <Routes>
-      <Route index element={<WebtoonUploadPage/>}></Route>
+      <Route index element={<MainPage/>}></Route>
     </Routes>
   );
 }
