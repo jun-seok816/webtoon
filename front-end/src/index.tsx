@@ -7,11 +7,13 @@ import "bootstrap-icons/font/bootstrap-icons.css";
 import "react-toastify/dist/ReactToastify.css";
 import "./index.scss";
 import { MainPage } from "./component/MainPage";
+import EditorUI from "./component/EditorUI";
 
 export default function Root() {
   return (
     <Routes>
       <Route index element={<MainPage/>}></Route>
+      <Route path="/editor" element={<EditorUI/>}></Route>
     </Routes>
   );
 }

@@ -133,8 +133,5 @@
     border-color: #323845;
   }
   
-  @media (prefers-reduced-motion: reduce) {
-    .ring__fg { animation: none; }
-    .loading__bar { transition: none; }
-  }
+
   
