@@ -1,30 +1,30 @@
 @import "../node_modules/bootstrap/scss/bootstrap";
 
-/* 기본 변수 */
-:root {
-  --bg: #0b0c0e;
-  --panel: #14161a;
-  --panel-2: #191c21;
-  --text: #e6e8ec;
-  --muted: #9aa3af;
-  --line: #272b33;
-  --brand: #7c5cff;
-  --brand-strong: #5c3bff;
-  --focus: #a78bfa;
-}
+// /* 기본 변수 */
+// :root {
+//   --bg: #0b0c0e;
+//   --panel: #14161a;
+//   --panel-2: #191c21;
+//   --text: #e6e8ec;
+//   --muted: #9aa3af;
+//   --line: #272b33;
+//   --brand: #7c5cff;
+//   --brand-strong: #5c3bff;
+//   --focus: #a78bfa;
+// }
 
-* {
-  box-sizing: border-box;
-}
-html,
-body,
-#root {
-  height: 100%;
-}
-body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--text);
-  font: 14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Noto Sans,
-    sans-serif;
-}
+// * {
+//   box-sizing: border-box;
+// }
+// html,
+// body,
+// #root {
+//   height: 100%;
+// }
+// body {
+//   margin: 0;
+//   background: var(--bg);
+//   color: var(--text);
+//   font: 14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Noto Sans,
+//     sans-serif;
+// }

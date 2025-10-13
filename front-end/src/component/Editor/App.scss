@@ -1,0 +1,255 @@
+/* src/styles/App.scss */
+
+// 1. Color Variables & Global Styles
+:root {
+  --bg: #0b0c0e;
+  --panel: #14161a;
+  --panel-2: #191c21; // 탭, 카드 등 내부 요소
+  --text: #e6e8ec;
+  --muted: #9aa3af;
+  --line: #272b33;
+  --brand: #7c5cff;
+  --brand-strong: #5c3bff;
+  --focus: #a78bfa;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+    Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-size: 14px; // 전체적인 폰트 크기 조정
+  overflow: hidden; // 스크롤바가 생기지 않도록
+}
+
+* {
+  box-sizing: border-box;
+}
+
+button {
+  background: none;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 4px;
+  &:hover {
+    background-color: var(--line);
+  }
+  &:active {
+    background-color: var(--panel-2);
+  }
+  &:focus {
+    outline: 1px solid var(--focus);
+    outline-offset: 1px;
+  }
+}
+
+input[type="text"] {
+  background-color: var(--panel);
+  border: 1px solid var(--line);
+  color: var(--text);
+  padding: 0.4rem 0.6rem;
+  border-radius: 4px;
+  &:focus {
+    outline: 1px solid var(--focus);
+    border-color: var(--focus);
+  }
+}
+
+select {
+  background-color: var(--panel);
+  border: 1px solid var(--line);
+  color: var(--text);
+  padding: 0.4rem 0.6rem;
+  border-radius: 4px;
+  cursor: pointer;
+  &:focus {
+    outline: 1px solid var(--focus);
+    border-color: var(--focus);
+  }
+}
+
+
+// 2. Layout Component Styles
+.app-layout {
+  display: grid;
+  grid-template-rows: auto auto 1fr; /* MenuBar, OptionsBar, MainContent */
+  grid-template-columns: auto 1fr auto; /* ToolsPanel, CanvasArea, RightPanels */
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden; // 전체 레이아웃에서 스크롤 방지
+}
+
+.menu-bar {
+  grid-column: 1 / -1; // 모든 컬럼 차지
+  grid-row: 1;
+  background-color: var(--panel);
+  border-bottom: 1px solid var(--line);
+  padding: 0.5rem 1rem;
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+
+  .menu-item {
+    color: var(--text);
+    text-decoration: none;
+    padding: 0.2rem 0;
+    font-weight: 500;
+    &:hover {
+      color: var(--brand);
+    }
+  }
+}
+
+.options-bar {
+  grid-column: 2 / -1; // 캔버스 ~ 우측 패널 위
+  grid-row: 2;
+  background-color: var(--panel);
+  border-bottom: 1px solid var(--line);
+  padding: 0.5rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+
+  label {
+    color: var(--muted);
+    font-size: 0.85rem;
+    margin-right: 0.5rem;
+  }
+}
+
+.tools-panel {
+  grid-column: 1;
+  grid-row: 3;
+  width: 60px; // 툴 패널 너비
+  background-color: var(--panel);
+  border-right: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  padding: 0.5rem 0;
+  gap: 2px; // 아이콘 간격
+
+  .tool-button {
+    width: 100%;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.2rem; // 아이콘 크기
+    color: var(--muted);
+
+    &.active {
+      background-color: var(--brand);
+      color: var(--text);
+    }
+    &:hover:not(.active) {
+      background-color: var(--line);
+      color: var(--text);
+    }
+  }
+}
+
+.canvas-area {
+  grid-column: 2;
+  grid-row: 3;
+  background-color: #333; // 캔버스 배경색 (체스보드 패턴 시뮬레이션)
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: auto; // 캔버스 확대/축소 시 스크롤
+  padding: 20px;
+
+  .canvas-placeholder {
+    width: 80%;
+    height: 80%;
+    background-color: var(--bg); // 실제 이미지 영역
+    border: 1px dashed var(--muted);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: var(--muted);
+    font-size: 1.2rem;
+  }
+}
+
+.right-panels {
+  grid-column: 3;
+  grid-row: 2 / -1; // OptionsBar 아래부터 끝까지
+  width: 250px; // 우측 패널 너비
+  background-color: var(--panel);
+  border-left: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+}
+
+.panel-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--line);
+  flex-shrink: 0; // 탭이 줄어들지 않도록
+}
+
+.panel-tab {
+  flex-grow: 1;
+  text-align: center;
+  padding: 0.6rem 0.5rem;
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 0.85rem;
+  transition: background-color 0.2s, color 0.2s;
+
+  &:hover {
+    background-color: var(--panel-2);
+    color: var(--text);
+  }
+
+  &.active {
+    background-color: var(--panel-2);
+    color: var(--text);
+    border-bottom: 2px solid var(--brand);
+    padding-bottom: calc(0.6rem - 2px); // border 두께만큼 상쇄
+  }
+}
+
+.panel-content {
+  padding: 1rem;
+  overflow-y: auto; // 패널 내용이 길어지면 스크롤
+  flex-grow: 1;
+
+  .panel-section {
+    background-color: var(--panel-2);
+    border-radius: 6px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border: 1px solid var(--line);
+
+    h3 {
+      margin-top: 0;
+      margin-bottom: 1rem;
+      font-size: 1rem;
+      color: var(--text);
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 0.5rem;
+      gap: 0.5rem;
+
+      label {
+        flex-basis: 70px; // 레이블 너비 고정
+        color: var(--muted);
+        font-size: 0.8rem;
+      }
+      input[type="text"] {
+        flex-grow: 1;
+        width: auto; // 유연하게 늘어나도록
+      }
+      select {
+        flex-grow: 1;
+      }
+    }
+  }
+}
