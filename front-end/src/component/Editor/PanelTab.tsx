@@ -1,19 +1,22 @@
-import React from 'react';
+import React from "react";
 
 interface PanelTabProps {
   label: string;
   isActive: boolean;
   onClick: () => void;
+  icon?: string;
 }
 
-const PanelTab: React.FC<PanelTabProps> = ({ label, isActive, onClick }) => {
+const PanelTab: React.FC<PanelTabProps> = ({ label, isActive, onClick, icon }) => {
   return (
-    <div
-      className={`panel-tab ${isActive ? 'active' : ''}`}
+    <button
+      type="button"
+      className={`panel-tab ${isActive ? "active" : ""}`}
       onClick={onClick}
     >
-      {label}
-    </div>
+      {icon && <i className={`bi ${icon}`} aria-hidden="true" />}
+      <span>{label}</span>
+    </button>
   );
 };
 

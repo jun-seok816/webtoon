@@ -1,51 +1,47 @@
-import React, { useState } from 'react';
+import React from "react";
 
-const ToolsPanel: React.FC = () => {
-  const [activeTool, setActiveTool] = useState('move');
+interface ToolsPanelProps {
+  activeTool: string;
+  onSelectTool: (tool: string) => void;
+}
 
+const tools = [
+  { id: "move", icon: "bi-arrows-move", label: "Move Tool (V)" },
+  { id: "marquee", icon: "bi-bounding-box-circles", label: "Marquee Tool (M)" },
+  { id: "lasso", icon: "bi-bezier", label: "Lasso Tool (L)" },
+  { id: "crop", icon: "bi-crop", label: "Crop Tool (C)" },
+  { id: "brush", icon: "bi-brush", label: "Brush Tool (B)" },
+  { id: "eraser", icon: "bi-eraser", label: "Eraser Tool (E)" },
+  { id: "gradient", icon: "bi-droplet-half", label: "Gradient Tool (G)" },
+  { id: "text", icon: "bi-type", label: "Text Tool (T)" },
+  { id: "shape", icon: "bi-shapes", label: "Shape Tool (U)" },
+  { id: "hand", icon: "bi-hand-index-thumb", label: "Hand Tool (H)" },
+  { id: "zoom", icon: "bi-zoom-in", label: "Zoom Tool (Z)" },
+];
+
+const ToolsPanel: React.FC<ToolsPanelProps> = ({ activeTool, onSelectTool }) => {
   return (
     <div className="tools-panel">
-      <button 
-        className={`tool-button ${activeTool === 'move' ? 'active' : ''}`}
-        onClick={() => setActiveTool('move')}
-        title="Move Tool (V)"
-      >[M]</button>
-      <button 
-        className={`tool-button ${activeTool === 'select' ? 'active' : ''}`}
-        onClick={() => setActiveTool('select')}
-        title="Marquee Tool (M)"
-      >[S]</button>
-      <button 
-        className={`tool-button ${activeTool === 'lasso' ? 'active' : ''}`}
-        onClick={() => setActiveTool('lasso')}
-        title="Lasso Tool (L)"
-      >[L]</button>
-      <button 
-        className={`tool-button ${activeTool === 'crop' ? 'active' : ''}`}
-        onClick={() => setActiveTool('crop')}
-        title="Crop Tool (C)"
-      >[C]</button>
-      <button 
-        className={`tool-button ${activeTool === 'brush' ? 'active' : ''}`}
-        onClick={() => setActiveTool('brush')}
-        title="Brush Tool (B)"
-      >[B]</button>
-      <button 
-        className={`tool-button ${activeTool === 'eraser' ? 'active' : ''}`}
-        onClick={() => setActiveTool('eraser')}
-        title="Eraser Tool (E)"
-      >[E]</button>
-      <button 
-        className={`tool-button ${activeTool === 'text' ? 'active' : ''}`}
-        onClick={() => setActiveTool('text')}
-        title="Text Tool (T)"
-      >[T]</button>
-      <button 
-        className={`tool-button ${activeTool === 'zoom' ? 'active' : ''}`}
-        onClick={() => setActiveTool('zoom')}
-        title="Zoom Tool (Z)"
-      >[Z]</button>
-      {/* ... 더 많은 툴 버튼 ... */}
+      {tools.map((tool) => (
+        <button
+          key={tool.id}
+          className={`tool-button ${activeTool === tool.id ? "active" : ""}`}
+          onClick={() => onSelectTool(tool.id)}
+          title={tool.label}
+        >
+          <i className={`bi ${tool.icon}`} aria-hidden="true" />
+        </button>
+      ))}
+      <div className="tool-divider" />
+      <button
+        className="tool-button"
+        title="Foreground / Background Colors (D)"
+      >
+        <span className="swatch-stack">
+          <span className="swatch swatch--primary" />
+          <span className="swatch swatch--secondary" />
+        </span>
+      </button>
     </div>
   );
 };
