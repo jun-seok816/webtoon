@@ -2,14 +2,7 @@ import React from "react";
 
 const menuItems = [
   "File",
-  "Edit",
-  "Image",
-  "Layer",
-  "Select",
-  "Filter",
-  "View",
-  "Window",
-  "Help",
+  "Edit",  
 ];
 
 const MenuBar: React.FC = () => {

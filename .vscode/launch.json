@@ -1,0 +1,45 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "WSL: nodemon + ts-node",
+      "type": "node",
+      "request": "launch",
+      "useWSL": true,
+      "runtimeExecutable": "nodemon",
+      "runtimeArgs": [
+        "--legacy-watch",
+        "--exec",
+        "node --require ts-node/register"
+      ],
+      "program": "${workspaceFolder}/back-end/src/web.ts",
+      "restart": true,
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "env": {
+        "TS_NODE_TRANSPILE_ONLY": "1",
+        "CHOKIDAR_USEPOLLING": "1"
+      },
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "WSL: ts-node (no nodemon)",
+      "type": "node",
+      "request": "launch",
+      "useWSL": true,
+      "runtimeArgs": ["--require", "ts-node/register"],
+      "program": "${workspaceFolder}/back-end/src/web.ts",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "Attach to 9229",
+      "type": "node",
+      "request": "attach",
+      "useWSL": true,
+      "port": 9229,
+      "restart": true
+    }
+  ]
+}
