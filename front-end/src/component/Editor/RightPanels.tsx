@@ -75,7 +75,7 @@ const RightPanels: React.FC = () => {
             </div>
 
             <div className="panel-section panel-section--list">
-              <div className="panel-section__header">
+              <div className="panel-section__header panel-section--compact">
                 <span>Layers</span>
                 <div className="panel-icons">
                   <button title="Create new layer">

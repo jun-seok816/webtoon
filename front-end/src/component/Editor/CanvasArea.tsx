@@ -56,16 +56,7 @@ interface CanvasAreaProps {
 }
 
 const CanvasArea: React.FC<CanvasAreaProps> = ({ zoom, onZoomChange }) => {
-  const clampZoom = (value: number) => Math.min(400, Math.max(10, value));
-
-  const handleZoomChange = (delta: number) => {
-    onZoomChange(clampZoom(zoom + delta));
-  };
-
-  const handleZoomReset = (value: number) => {
-    onZoomChange(clampZoom(value));
-  };
-
+  
   const navigatorViewportScale = Math.max(0.25, Math.min(1.3, 100 / zoom));
 
   return (
@@ -84,23 +75,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ zoom, onZoomChange }) => {
             <span className="document-tab__name">logo.ai</span>
             <span className="document-tab__meta">CMYK • 1200 x 630</span>
           </button>
-        </div>
-        <div className="canvas-header-controls">
-          <div className="canvas-zoom">
-            <button onClick={() => handleZoomChange(-10)} aria-label="Zoom out">
-              <i className="bi bi-dash" aria-hidden="true" />
-            </button>
-            <span>{zoom}%</span>
-            <button onClick={() => handleZoomChange(10)} aria-label="Zoom in">
-              <i className="bi bi-plus" aria-hidden="true" />
-            </button>
-          </div>
-          <div className="canvas-view">
-            <button onClick={() => handleZoomReset(33)}>Fit</button>
-            <button onClick={() => handleZoomReset(66)}>66%</button>
-            <button onClick={() => handleZoomReset(100)}>100%</button>
-          </div>
-        </div>
+        </div>        
       </div>
 
       <div className="canvas-body">
@@ -132,15 +107,6 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ zoom, onZoomChange }) => {
               <div
                 className="navigator-viewport"
                 style={{ transform: `scaleY(${navigatorViewportScale})` }}
-              />
-            </div>
-          </div>
-          <div className="navigator-controls">
-            <span>{zoom}%</span>
-            <div className="navigator-slider">
-              <div
-                className="navigator-slider__fill"
-                style={{ width: `${Math.min(100, zoom)}%` }}
               />
             </div>
           </div>

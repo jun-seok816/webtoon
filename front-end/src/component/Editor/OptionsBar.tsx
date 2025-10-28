@@ -7,28 +7,6 @@ interface OptionsBarProps {
 const OptionsBar: React.FC<OptionsBarProps> = ({ activeTool }) => {
   const renderToolOptions = () => {
     switch (activeTool) {
-      case "brush":
-        return (
-          <>
-            <div className="options-group">
-              <label htmlFor="brush-preset">Preset</label>
-              <select id="brush-preset" defaultValue="soft-round">
-                <option value="soft-round">Soft Round</option>
-                <option value="hard-round">Hard Round</option>
-                <option value="texture">Texture</option>
-              </select>
-            </div>
-            <div className="options-group">
-              <label htmlFor="brush-size">Size</label>
-              <input id="brush-size" type="number" defaultValue={32} />
-            </div>
-            <div className="options-group">
-              <label htmlFor="brush-flow">Flow</label>
-              <input id="brush-flow" type="number" defaultValue={80} />
-            </div>
-            <button className="options-button">Smoothing</button>
-          </>
-        );
       case "text":
         return (
           <>
@@ -107,9 +85,6 @@ const OptionsBar: React.FC<OptionsBarProps> = ({ activeTool }) => {
       <div className="options-title">{activeTool.toUpperCase()} TOOL</div>
       {renderToolOptions()}
       <div className="options-right">
-        <button className="options-button">
-          <i className="bi bi-record-circle" aria-hidden="true" /> Actions
-        </button>
         <button className="options-button">
           <i className="bi bi-question-circle" aria-hidden="true" /> Learn
         </button>
