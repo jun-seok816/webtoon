@@ -241,6 +241,11 @@ input[type="text"] {
     color: var(--text);
     background: rgba(255, 255, 255, 0.05);
   }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
 }
 
 .menu-bar__modal-body {
@@ -301,6 +306,11 @@ input[type="text"] {
   &:hover {
     color: var(--text);
   }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
 }
 
 .menu-bar__modal-primary {
@@ -313,6 +323,11 @@ input[type="text"] {
   &:hover {
     background: rgba(90, 114, 242, 0.35);
     color: var(--text);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
   }
 }
 
