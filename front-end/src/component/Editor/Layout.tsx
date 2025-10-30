@@ -7,6 +7,11 @@ import RightPanels from "./RightPanels";
 import TitleBar from "./TitleBar";
 import StatusBar from "./StatusBar";
 import "./App.scss";
+import { Main } from "@jsLib/class/Main_class";
+
+export class Editor extends Main{
+  
+}
 
 const Layout: React.FC = () => {
   const [activeTool, setActiveTool] = useState("move");

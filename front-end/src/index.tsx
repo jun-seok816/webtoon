@@ -6,16 +6,12 @@ import { ToastContainer, toast } from "react-toastify";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import "react-toastify/dist/ReactToastify.css";
 import "./index.scss";
-import { MainPage } from "./component/MainPage";
-import EditorUI from "./component/EditorUI";
 import Layout from "./component/Editor/Layout";
 
 export default function Root() {
   return (
     <Routes>
-      <Route index element={<MainPage/>}></Route>
-      <Route path="/editor" element={<EditorUI/>}></Route>
-      <Route path="/editor2" element={<Layout/>}></Route>
+      <Route index element={<Layout/>}></Route>            
     </Routes>
   );
 }

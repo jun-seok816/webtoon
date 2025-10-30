@@ -9,10 +9,7 @@ import throttle from "lodash/throttle";
 import { ImageItem, Upload } from "@jsLib/class/Upload";
 import { Loading } from "@jsLib/class/Loading";
 
-const menuItems = [
-  "File",
-  "Edit",  
-];
+const menuItems = ["File", "Edit"];
 
 type MenuBarProps = {
   upload?: Upload;
@@ -130,7 +127,7 @@ const MenuBar: React.FC<MenuBarProps> = ({ upload, loading }) => {
     };
   }, [throttledRender]);
 
-  const makeThumbnail = useCallback(async (file: File, maxSide = 2000) => {
+  const makeThumbnail = useCallback(async (file: File, maxSide = 1200) => {
     const bmp = await createImageBitmap(file);
     let { width, height } = bmp;
     const scale = Math.min(1, maxSide / Math.max(width, height));
@@ -162,10 +159,61 @@ const MenuBar: React.FC<MenuBarProps> = ({ upload, loading }) => {
     return blob;
   }, []);
 
+  const scheduleThumbnailUpdate = useCallback(
+    (item: ImageItem) => {
+      if (!upload) return;
+
+      const run = async () => {
+        try {
+          const thumbBlob = await makeThumbnail(item.file);
+          const previewUrl = URL.createObjectURL(thumbBlob);
+          const exists = upload.pt_items.some((entry) => entry.id === item.id);
+
+          if (!exists) {
+            URL.revokeObjectURL(previewUrl);
+            return;
+          }
+
+          const previousUrl = item.previewUrl;
+          item.previewUrl = previewUrl;
+          upload.im_forceRender();
+          throttledRender?.();
+
+          if (previousUrl) {
+            URL.revokeObjectURL(previousUrl);
+          }
+        } catch (error) {
+          console.error(error);
+        }
+      };
+
+      if (typeof window !== "undefined") {
+        const maybeRIC = (window as unknown as {
+          requestIdleCallback?: (callback: () => void) => number;
+        }).requestIdleCallback;
+
+        if (typeof maybeRIC === "function") {
+          maybeRIC(() => {
+            void run();
+          });
+          return;
+        }
+      }
+
+      setTimeout(() => {
+        void run();
+      }, 16);
+    },
+    [makeThumbnail, throttledRender, upload]
+  );
+
   const addFiles = useCallback(
     async (files: File[]) => {
       if (!upload || !loading) return;
-      const imageFiles = files.filter((file) => file.type.startsWith("image/"));
+      const imageFiles = files.filter((file) => {
+        if (file.type.startsWith("image/")) return true;
+        return file.name.toLowerCase().endsWith(".psd");
+      });
       if (imageFiles.length === 0) return;
 
       const total = imageFiles.length;
@@ -174,51 +222,27 @@ const MenuBar: React.FC<MenuBarProps> = ({ upload, loading }) => {
       upload.im_forceRender();
 
       try {
-        const next = await Promise.all(
-          imageFiles.map(
-            (file, index) =>
-              new Promise<ImageItem>((resolve, reject) => {
-                const id =
-                  globalThis.crypto?.randomUUID?.() ??
-                  `${Date.now()}-${Math.random()}-${index}`;
+        const next = imageFiles.map((file, index) => {
+          const id =
+            globalThis.crypto?.randomUUID?.() ??
+            `${Date.now()}-${Math.random()}-${index}`;
 
-                const reader = new FileReader();
+          completed += 1;
+          loading.iv_per = Math.round((completed / total) * 100);
+          throttledRender?.();
 
-                reader.onprogress = () => {
-                  // 진행도 UI가 필요하면 여기에서 사용
-                };
-
-                reader.onload = async () => {
-                  completed += 1;
-                  loading.iv_per = Math.round((completed / total) * 100);
-                  throttledRender?.();
-
-                  try {
-                    const thumbBlob = await makeThumbnail(file);
-                    const previewUrl = URL.createObjectURL(thumbBlob);
-                    resolve({
-                      id,
-                      file,
-                      previewUrl,
-                      name: file.name,
-                      size: file.size,
-                      type: file.type,
-                    });
-                  } catch (error) {
-                    reject(error);
-                  }
-                };
-
-                reader.onerror = () => {
-                  reject(reader.error ?? new Error("파일을 읽을 수 없습니다."));
-                };
-
-                reader.readAsDataURL(file);
-              })
-          )
-        );
+          return {
+            id,
+            file,
+            previewUrl: URL.createObjectURL(file),
+            name: file.name,
+            size: file.size,
+            type: file.type,
+          };
+        });
 
         upload.pt_items = [...upload.pt_items, ...next];
+        next.forEach((item) => scheduleThumbnailUpdate(item));
       } catch (error) {
         console.error(error);
       } finally {
@@ -227,7 +251,7 @@ const MenuBar: React.FC<MenuBarProps> = ({ upload, loading }) => {
         upload.im_forceRender();
       }
     },
-    [loading, makeThumbnail, throttledRender, upload]
+    [loading, scheduleThumbnailUpdate, throttledRender, upload]
   );
 
   const handleFileMenuClick = () => {
