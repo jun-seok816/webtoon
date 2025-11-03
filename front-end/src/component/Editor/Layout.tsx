@@ -8,24 +8,76 @@ import TitleBar from "./TitleBar";
 import StatusBar from "./StatusBar";
 import "./App.scss";
 import { Main } from "@jsLib/class/Main_class";
+import { Upload } from "@jsLib/class/Upload";
+import { Loading } from "@jsLib/class/Loading";
 
-export class Editor extends Main{
-  
+export class Editor extends Main {
+  public iv_activeTool = "move";
+  private iv_zoom = 100;
+  private iv_upload: Upload;
+  private iv_loading: Loading;
+
+  constructor() {
+    super();
+    this.iv_upload = new Upload(() => {
+      this.im_forceRender();
+    });
+    this.iv_loading = new Loading(
+      () => {
+        this.im_forceRender();
+      },
+      "editor"
+    );
+  }
+
+  public get pt_activeTool() {
+    return this.iv_activeTool;
+  }
+
+  public im_setActiveTool(tool: string) {
+    if (this.iv_activeTool === tool) {
+      return;
+    }
+    this.iv_activeTool = tool;
+    this.im_forceRender();
+  }
+
+  public get pt_zoom() {
+    return this.iv_zoom;
+  }
+
+  public im_setZoom(nextZoom: number) {
+    const clampedZoom = Math.max(10, Math.min(400, Math.round(nextZoom)));
+    if (this.iv_zoom === clampedZoom) {
+      return;
+    }
+    this.iv_zoom = clampedZoom;
+    this.im_forceRender();
+  }
+
+  public get pt_upload() {
+    return this.iv_upload;
+  }
+
+  public get pt_loading() {
+    return this.iv_loading;
+  }
 }
 
 const Layout: React.FC = () => {
-  const [activeTool, setActiveTool] = useState("move");
-  const [zoom, setZoom] = useState(66);
+  const [editor] = useState(() => new Editor());
+
+  editor.im_Prepare_Hooks(() => {});
 
   return (
     <div className="app-layout">
-      <TitleBar documentName="webtoon-editor.psd" zoom={zoom} />
-      <MenuBar />
-      <OptionsBar activeTool={activeTool} />
-      <ToolsPanel activeTool={activeTool} onSelectTool={setActiveTool} />
-      <CanvasArea zoom={zoom} onZoomChange={setZoom} />
-      <RightPanels />
-      <StatusBar activeTool={activeTool} zoom={zoom} />
+      <TitleBar editor={editor} />
+      <MenuBar editor={editor} />
+      <OptionsBar editor={editor} />
+      <ToolsPanel editor={editor} />
+      <CanvasArea editor={editor} />
+      <RightPanels editor={editor} />
+      <StatusBar editor={editor} />
     </div>
   );
 };

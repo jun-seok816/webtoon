@@ -8,12 +8,12 @@ import React, {
 import throttle from "lodash/throttle";
 import { ImageItem, Upload } from "@jsLib/class/Upload";
 import { Loading } from "@jsLib/class/Loading";
+import { Editor } from "./Layout";
 
 const menuItems = ["File", "Edit"];
 
 type MenuBarProps = {
-  upload?: Upload;
-  loading?: Loading;
+  editor: Editor;
 };
 
 type FileUploadModalProps = {
@@ -109,7 +109,9 @@ const FileUploadModal: React.FC<FileUploadModalProps> = ({
   );
 };
 
-const MenuBar: React.FC<MenuBarProps> = ({ upload, loading }) => {
+const MenuBar: React.FC<MenuBarProps> = ({ editor }) => {
+  const upload: Upload | undefined = editor.pt_upload;
+  const loading: Loading | undefined = editor.pt_loading;
   const [isFileModalOpen, setIsFileModalOpen] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);

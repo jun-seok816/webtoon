@@ -1,10 +1,13 @@
 import React from "react";
+import { Editor } from "./Layout";
 
 interface OptionsBarProps {
-  activeTool: string;
+  editor: Editor;
 }
 
-const OptionsBar: React.FC<OptionsBarProps> = ({ activeTool }) => {
+const OptionsBar: React.FC<OptionsBarProps> = ({ editor }) => {
+  const activeTool = editor.pt_activeTool;
+
   const renderToolOptions = () => {
     switch (activeTool) {
       case "text":

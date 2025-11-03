@@ -1,11 +1,11 @@
 import React from "react";
+import { Editor } from "./Layout";
 
 interface StatusBarProps {
-  zoom: number;
-  activeTool: string;
+  editor: Editor;
 }
 
-const StatusBar: React.FC<StatusBarProps> = ({ zoom, activeTool }) => {
+const StatusBar: React.FC<StatusBarProps> = ({ editor }) => {
   return (
     <div className="status-bar">
       <div className="status-section">
@@ -22,12 +22,8 @@ const StatusBar: React.FC<StatusBarProps> = ({ zoom, activeTool }) => {
       </div>
       <div className="status-section">
         <span className="status-label">Tool</span>
-        {activeTool.toUpperCase()}
-      </div>
-      <div className="status-section">
-        <span className="status-label">Zoom</span>
-        {zoom}%
-      </div>
+        {editor.pt_activeTool.toUpperCase()}
+      </div>      
     </div>
   );
 };

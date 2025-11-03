@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import PanelTab from "./PanelTab";
+import { Editor } from "./Layout";
 
 const layerItems = [
   { id: "layer-3", name: "Speech Bubble", info: "Blend: Screen • 80%", isLocked: false },
@@ -16,7 +17,12 @@ const historyItems = [
   "Transform Layer",
 ];
 
-const RightPanels: React.FC = () => {
+interface RightPanelsProps {
+  editor: Editor;
+}
+
+const RightPanels: React.FC<RightPanelsProps> = ({ editor }) => {
+  void editor;
   const [activeTab, setActiveTab] = useState<"layers" | "properties" | "history">("layers");
 
   return (

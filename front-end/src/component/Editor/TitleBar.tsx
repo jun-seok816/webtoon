@@ -1,20 +1,18 @@
 import React from "react";
+import { Editor } from "./Layout";
 
 interface TitleBarProps {
-  documentName: string;
-  zoom: number;
+  editor: Editor;
 }
 
-const TitleBar: React.FC<TitleBarProps> = ({ documentName, zoom }) => {
+const TitleBar: React.FC<TitleBarProps> = ({ editor }) => {
+  void editor;
   return (
     <header className="title-bar">
       <div className="title-bar__brand">
         <span className="brand-indicator" />
         Toon Studio
-      </div>
-      <div className="title-bar__document">
-        {documentName} @ {zoom}% (RGB/8)
-      </div>
+      </div>      
     </header>
   );
 };

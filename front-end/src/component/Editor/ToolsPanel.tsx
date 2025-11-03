@@ -1,8 +1,8 @@
 import React from "react";
+import { Editor } from "./Layout";
 
 interface ToolsPanelProps {
-  activeTool: string;
-  onSelectTool: (tool: string) => void;
+  editor: Editor;
 }
 
 const tools = [
@@ -11,14 +11,16 @@ const tools = [
   { id: "text", icon: "bi-type", label: "Text Tool (T)" },
 ];
 
-const ToolsPanel: React.FC<ToolsPanelProps> = ({ activeTool, onSelectTool }) => {
+const ToolsPanel: React.FC<ToolsPanelProps> = ({ editor }) => {
+  const activeTool = editor.pt_activeTool;
+
   return (
     <div className="tools-panel">
       {tools.map((tool) => (
         <button
           key={tool.id}
           className={`tool-button ${activeTool === tool.id ? "active" : ""}`}
-          onClick={() => onSelectTool(tool.id)}
+          onClick={() => editor.im_setActiveTool(tool.id)}
           title={tool.label}
         >
           <i className={`bi ${tool.icon}`} aria-hidden="true" />
