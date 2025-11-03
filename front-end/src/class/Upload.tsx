@@ -7,6 +7,9 @@ export type ImageItem = {
   name: string;
   size: number;
   type: string;  
+  serverId?: string;
+  serverFilename?: string;
+  uploadedUrl?: string;
 };
 export class Upload {
   // 인스턴스 변수(iv_)

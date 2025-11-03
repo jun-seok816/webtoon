@@ -287,8 +287,65 @@ const MenuBar: React.FC<MenuBarProps> = ({ editor }) => {
 
     setIsUploading(true);
     try {
+      const prevCount = upload.pt_items.length;
       await addFiles(selectedFiles);
+      const appendedCount = upload.pt_items.length - prevCount;
+
+      if (appendedCount <= 0) {
+        return;
+      }
+
+      loading.is_loading = true;
+      upload.im_forceRender();
+
+      const response = await upload.im_UploadFormData("/api/uploads", {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        onUploadProgress: (event) => {
+          if (!event.total) {
+            return;
+          }
+          loading.iv_per = Math.round((event.loaded / event.total) * 100);
+          upload.im_forceRender();
+        },
+      });
+
+      const uploadedItems: Array<{
+        id: string;
+        filename: string;
+        url: string;
+      }> = Array.isArray(response?.data?.items)
+        ? response.data.items
+        : [];
+
+      if (uploadedItems.length > 0) {
+        const currentItems = [...upload.pt_items];
+        const startIndex = Math.max(
+          0,
+          currentItems.length - appendedCount
+        );
+
+        uploadedItems.forEach((uploadedItem, index) => {
+          const targetIndex = startIndex + index;
+          if (!currentItems[targetIndex]) return;
+          currentItems[targetIndex] = {
+            ...currentItems[targetIndex],
+            serverId: uploadedItem.id,
+            serverFilename: uploadedItem.filename,
+            uploadedUrl: uploadedItem.url,
+          };
+        });
+
+        upload.pt_items = currentItems;
+        upload.im_forceRender();
+      }
+    } catch (error) {
+      console.error(error);
     } finally {
+      loading.iv_per = 0;
+      loading.is_loading = false;
+      upload.im_forceRender();
       setIsUploading(false);
       setIsFileModalOpen(false);
       setSelectedFiles([]);
