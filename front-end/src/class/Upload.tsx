@@ -10,6 +10,11 @@ export type ImageItem = {
   serverId?: string;
   serverFilename?: string;
   uploadedUrl?: string;
+  convertedFromPsd?: boolean;
+  dimensions?: {
+    width: number;
+    height: number;
+  };
 };
 export class Upload {
   // 인스턴스 변수(iv_)

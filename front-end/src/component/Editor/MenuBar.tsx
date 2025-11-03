@@ -292,6 +292,7 @@ const MenuBar: React.FC<MenuBarProps> = ({ editor }) => {
       const appendedCount = upload.pt_items.length - prevCount;
 
       if (appendedCount <= 0) {
+        Editor.im_toast("추가된 파일이 없습니다.", "warn");
         return;
       }
 
@@ -315,6 +316,8 @@ const MenuBar: React.FC<MenuBarProps> = ({ editor }) => {
         id: string;
         filename: string;
         url: string;
+        convertedFromPsd?: boolean;
+        dimensions?: { width: number; height: number };
       }> = Array.isArray(response?.data?.items)
         ? response.data.items
         : [];
@@ -334,14 +337,24 @@ const MenuBar: React.FC<MenuBarProps> = ({ editor }) => {
             serverId: uploadedItem.id,
             serverFilename: uploadedItem.filename,
             uploadedUrl: uploadedItem.url,
+            convertedFromPsd: uploadedItem.convertedFromPsd,
+            dimensions: uploadedItem.dimensions,
           };
         });
 
         upload.pt_items = currentItems;
         upload.im_forceRender();
       }
+
+      if (response?.data?.success) {
+        const count = uploadedItems.length || appendedCount;
+        Editor.im_toast(`${count}개 파일 업로드 완료`, "success");
+      } else {
+        Editor.im_toast("이미지 업로드가 완료되었는지 확인이 필요합니다.", "info");
+      }
     } catch (error) {
       console.error(error);
+      Editor.im_toast("이미지 업로드에 실패했습니다.", "error");
     } finally {
       loading.iv_per = 0;
       loading.is_loading = false;

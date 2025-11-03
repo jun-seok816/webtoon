@@ -1,4 +1,4 @@
-{  
+{
   "scripts": {
     "start": "nodemon --exec ./node_modules/.bin/ts-node ./src/web.ts",
     "pstart": "pm2 start ./dist/web.js --name tooniz --watch --max-memory-restart 9900M",
@@ -7,6 +7,7 @@
   "author": "hdr",
   "license": "ISC",
   "dependencies": {
+    "ag-psd": "^28.4.1",
     "body-parser": "^1.20.3",
     "cookie-parser": "^1.4.7",
     "dotenv": "^16.5.0",
@@ -15,6 +16,7 @@
     "express-session": "^1.18.1",
     "multer": "^1.4.5-lts.1",
     "mysql2": "^2.3.3",
+    "sharp": "^0.34.4",
     "uuid": "^11.1.0"
   },
   "devDependencies": {
@@ -25,6 +27,7 @@
     "@types/express-session": "^1.18.2",
     "@types/multer": "^1.4.12",
     "@types/node": "^24.0.3",
+    "@types/sharp": "^0.31.1",
     "nodemon": "^2.0.15",
     "ts-loader": "^9.2.6",
     "ts-node": "^10.4.0",
