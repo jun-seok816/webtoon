@@ -1,5 +1,6 @@
 import React from "react";
 import { Editor } from "./Layout";
+import "./StatusBar.scss";
 
 interface StatusBarProps {
   editor: Editor;

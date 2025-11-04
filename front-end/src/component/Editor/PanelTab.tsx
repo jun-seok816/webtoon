@@ -1,4 +1,5 @@
 import React from "react";
+import "./PanelTab.scss";
 
 interface PanelTabProps {
   label: string;

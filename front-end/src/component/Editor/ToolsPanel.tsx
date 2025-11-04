@@ -1,5 +1,6 @@
 import React from "react";
 import { Editor } from "./Layout";
+import "./ToolsPanel.scss";
 
 interface ToolsPanelProps {
   editor: Editor;

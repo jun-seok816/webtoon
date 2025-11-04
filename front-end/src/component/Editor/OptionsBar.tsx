@@ -1,5 +1,6 @@
 import React from "react";
 import { Editor } from "./Layout";
+import "./OptionsBar.scss";
 
 interface OptionsBarProps {
   editor: Editor;

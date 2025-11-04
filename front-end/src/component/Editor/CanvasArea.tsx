@@ -5,6 +5,7 @@ import React, {
   useState
 } from "react";
 import { Editor } from "./Layout";
+import "./CanvasArea.scss";
 
 const LONG_IMAGE_WIDTH = 1000;
 const LONG_IMAGE_HEIGHT = 5400;

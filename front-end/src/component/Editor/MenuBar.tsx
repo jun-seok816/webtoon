@@ -8,6 +8,7 @@ import throttle from "lodash/throttle";
 import { ImageItem, Upload } from "@jsLib/class/Upload";
 import { Loading } from "@jsLib/class/Loading";
 import { Editor } from "./Layout";
+import "./MenuBar.scss";
 
 const menuItems = ["File", "Edit"];
 

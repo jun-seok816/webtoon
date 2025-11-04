@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import PanelTab from "./PanelTab";
 import { Editor } from "./Layout";
+import "./RightPanels.scss";
 
 const layerItems = [
   { id: "layer-3", name: "Speech Bubble", info: "Blend: Screen • 80%", isLocked: false },
