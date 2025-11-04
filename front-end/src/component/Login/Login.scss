@@ -194,6 +194,18 @@
   display: inline-block;
 }
 
+.login-feedback {
+  margin: 0;
+  font-size: 0.85rem;
+  text-align: left;
+  &--error {
+    color: #ff6b6b;
+  }
+  &--status {
+    color: #8a9bff;
+  }
+}
+
 .login-link {
   color: #8a9bff;
   text-decoration: none;

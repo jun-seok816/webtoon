@@ -8,9 +8,13 @@ var MySQLStore = require("express-mysql-session")(session);
 import cookieParser from "cookie-parser";
 import dotenv from 'dotenv';
 import uploadRouter from "./router/uploadRouter";
+import loginRouter from "./router/loginRouter";
+import Db from "./db";
 
 // .env 파일에서 환경 변수 로드
 dotenv.config();
+
+const lv_Db = new Db();
 
 declare global {
   namespace NodeJS {
@@ -52,6 +56,11 @@ const gf_cs = (req: Request, res: Response, next: NextFunction)=>{
   }
 }
 
+process._myApp = {
+  db: mysql.createPool(lv_Db.pt_Data.DB),
+  checkSession: gf_cs,  
+};
+
 //https://expressjs.com/ko/starter/static-files.html s
 app.set("puplic", path.join(__dirname, "../build"));
 app.use(express.static(app.settings.puplic));
@@ -62,7 +71,7 @@ app.use(bodyParser.urlencoded({ limit: "100mb", extended: false }));
 
 
 app.use(cookieParser());
-
+var sessionStore = new MySQLStore(lv_Db.pt_Data.DB);
 const sessionMiddleware = session({
   secret: "subscribe_loutbtbahah4281!@",
   resave: true,
@@ -75,6 +84,7 @@ const sessionMiddleware = session({
 app.use(sessionMiddleware);
 app.use("/data", express.static(path.join(__dirname, "../../data")));
 app.use("/api/uploads", uploadRouter);
+app.use("/api/login", loginRouter);
 
 // ② React 번들의 정적 파일
 app.use(

@@ -2,10 +2,7 @@ import axios from "axios";
 import bcrypt from "bcryptjs";
 import express, { Request, Response } from "express";
 import { OkPacket, RowDataPacket } from "mysql2/promise";
-const router = express.Router();
-
-const SOCIAL_PLACEHOLDER_HASH =
-  "$2a$10$5k9rA9kZZgwyU0YJIUK6F.2Ee.fA1DEuDfSU/EYEYVplpXCMVvj.S";
+const loginRouter = express.Router();
 
 async function regenerateSession(req: Request) {
   await new Promise<void>((resolve, reject) => {
@@ -19,12 +16,14 @@ async function regenerateSession(req: Request) {
   });
 }
 
+const normalizeEmail = (email: string) => email.trim().toLowerCase();
+
 /**
  * POST /loginEmailCheck
  * @body { email: string }
  * @returns { exists: boolean }
  */
-router.post("/loginEmailCheck", async (req: Request, res: Response) => {
+loginRouter.post("/loginEmailCheck", async (req: Request, res: Response) => {
   try {
     const email: string | undefined = req.body?.email ?? req.body?.data?.email;
     if (!email) {
@@ -50,8 +49,71 @@ router.post("/loginEmailCheck", async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * POST /login
+ * @body { email: string; password: string }
+ */
+loginRouter.post("/login", async (req: Request, res: Response) => {
+  try {
+    const payload = req.body?.data ?? req.body;
+    const rawEmail: string | undefined = payload?.email;
+    const password: string | undefined = payload?.password;
 
-router.post("/logout", (req: Request, res: Response) => {
+    if (!rawEmail || !password) {
+      res.status(400).json({ err: true, msg: "email and password are required" });
+      return;
+    }
+
+    const email = normalizeEmail(rawEmail);
+    const db = process._myApp.db.promise();
+
+    const [rows] = await db.query<RowDataPacket[]>(
+      `SELECT id, password_hash, display_name, provider
+         FROM users
+        WHERE email = ?
+        LIMIT 1`,
+      [email]
+    );
+
+    if (!rows.length) {
+      res.status(401).json({ err: true, msg: "invalid email or password" });
+      return;
+    }
+
+    const user = rows[0];
+    if (!user.password_hash) {
+      res.status(400).json({
+        err: true,
+        msg: "이 계정은 소셜 로그인을 사용하고 있어요. 해당 공급자로 로그인하세요.",
+      });
+      return;
+    }
+
+    const passwordMatch = await bcrypt.compare(password, user.password_hash);
+    if (!passwordMatch) {
+      res.status(401).json({ err: true, msg: "invalid email or password" });
+      return;
+    }
+
+    await db.query("UPDATE users SET last_login_at = NOW() WHERE id = ?", [
+      user.id,
+    ]);
+
+    await regenerateSession(req);
+    req.session.userId = Number(user.id);
+    req.session.email = email;
+    req.session.displayName = user.display_name;
+    req.session.provider = (user.provider as any) ?? "local";
+
+    res.json({ err: false, msg: "login" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ err: true });
+  }
+});
+
+
+loginRouter.post("/logout", (req: Request, res: Response) => {
   // 세션 쿠키 이름(기본: connect.sid). 미들웨어에서 name을 바꿨다면 동일하게 맞추세요.
   const cookieName = process.env.SESSION_NAME || "connect.sid";
   const cookiePath = (req.session as any)?.cookie?.path || "/";
@@ -81,7 +143,7 @@ router.post("/logout", (req: Request, res: Response) => {
 });
 
 
-router.get("/loginSession", (req, res) => {
+loginRouter.get("/loginSession", (req, res) => {
   console.log(`session Data user_id: %o`, req.session.userId);
   if (req.session.userId) {
     res.json({
@@ -96,13 +158,11 @@ router.get("/loginSession", (req, res) => {
 });
 
 
-const normalizeEmail = (email: string) => email.trim().toLowerCase();
-
 /**
  * POST /save_data_google
  * @body { access_token: string; expires_in?: number }
  */
-router.post("/save_data_google", async (req: Request, res: Response) => {
+loginRouter.post("/save_data_google", async (req: Request, res: Response) => {
   try {
     const access_token: string | undefined =
       req.body?.access_token ?? req.body?.data?.access_token;
@@ -163,8 +223,8 @@ router.post("/save_data_google", async (req: Request, res: Response) => {
           role,
           status,
           last_login_at
-        ) VALUES (?, ?, ?, 'google', ?, 'user', 'active', NOW())`,
-        [email, SOCIAL_PLACEHOLDER_HASH, resolvedDisplayName, providerId]
+        ) VALUES (?, NULL, ?, 'google', ?, 'user', 'active', NOW())`,
+        [email, resolvedDisplayName, providerId]
       );
       userId = Number(result.insertId);
     } else {
@@ -199,7 +259,7 @@ router.post("/save_data_google", async (req: Request, res: Response) => {
  * POST /sign_up
  * @body { email: string; password: string; displayName: string }
  */
-router.post("/sign_up", async (req: Request, res: Response) => {
+loginRouter.post("/sign_up", async (req: Request, res: Response) => {
   try {
     const payload = req.body?.data ?? req.body;
     const rawEmail: string | undefined = payload?.email;
@@ -271,4 +331,4 @@ router.post("/sign_up", async (req: Request, res: Response) => {
   }
 });
 
-export default router;
+export default loginRouter;
