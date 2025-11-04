@@ -27,10 +27,11 @@ declare global {
 
 declare module "express-session" {
   export interface SessionData {
-    user: number;
-    picture_uri: string;
-    email:string;
-    name:string;        
+    userId?: number;
+    email?: string;
+    displayName?: string;
+    provider?: "local" | "google" | "kakao" | "naver";
+    picture_uri?: string;
   }
 }
 
@@ -42,7 +43,7 @@ declare module 'express-serve-static-core' {
 
 const gf_cs = (req: Request, res: Response, next: NextFunction)=>{
    // 세션에 userId가 없을 경우
-   if (!req.session || !req.session.user) {
+   if (!req.session || !req.session.userId) {
     // 세션이 존재하지 않을 때
     res.status(401).send('Unauthorized: No session available');
   } else {
