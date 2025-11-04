@@ -16,6 +16,10 @@ export class Editor extends Main {
   private iv_zoom = 100;
   private iv_upload: Upload;
   private iv_loading: Loading;
+  public iv_isFileModalOpen = false;
+  public iv_selectedFiles: File[] = [];
+  public iv_isUploading = false;
+  public iv_uploadTitle = "";
 
   constructor() {
     super();
@@ -61,6 +65,22 @@ export class Editor extends Main {
 
   public get pt_loading() {
     return this.iv_loading;
+  }
+
+  public get pt_isFileModalOpen() {
+    return this.iv_isFileModalOpen;
+  }
+
+  public get pt_selectedFiles() {
+    return this.iv_selectedFiles;
+  }
+
+  public get pt_isUploading() {
+    return this.iv_isUploading;
+  }
+
+  public get pt_uploadTitle() {
+    return this.iv_uploadTitle;
   }
 }
 

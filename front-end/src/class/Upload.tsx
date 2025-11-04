@@ -3,18 +3,9 @@ import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 export type ImageItem = {
   id: string;
   file: File;
-  previewUrl: string;
   name: string;
   size: number;
-  type: string;  
-  serverId?: string;
-  serverFilename?: string;
-  uploadedUrl?: string;
-  convertedFromPsd?: boolean;
-  dimensions?: {
-    width: number;
-    height: number;
-  };
+  type: string;
 };
 export class Upload {
   // 인스턴스 변수(iv_)
@@ -50,8 +41,6 @@ export class Upload {
   // ───────── 변경 메서드(im_) ─────────
 
   public im_Remove(id: string) {
-    const t = this.iv_items.find((x) => x.id === id);
-    if (t) URL.revokeObjectURL(t.previewUrl);
     this.iv_items = this.iv_items.filter((x) => x.id !== id);
     this.im_forceRender();
   }
@@ -69,8 +58,8 @@ export class Upload {
   }
 
   public im_Clear() {
-    this.iv_items.forEach((x) => URL.revokeObjectURL(x.previewUrl));
     this.iv_items = [];
+    this.iv_uploadPct = 0;
     this.im_forceRender();
   }
 
@@ -103,6 +92,7 @@ export class Upload {
       },
     });
 
+    this.im_Clear();
     return res;
   }
 }

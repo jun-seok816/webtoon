@@ -64,18 +64,21 @@ select,
 input[type="number"],
 input[type="text"] {
   background-color: var(--panel-2);
-  border: 1px solid var(--line);
+  border: 1px solid #6a6c73;
   color: var(--text);
-  border-radius: 4px;
+  border-radius: 4px;  
   padding: 0.35rem 0.6rem;
   transition: border-color 0.2s, box-shadow 0.2s;
-
+  width: 100%;
+  margin-top: 1em;
   &:focus {
     outline: none;
     border-color: var(--accent);
     box-shadow: 0 0 0 2px rgba(90, 114, 242, 0.25);
   }
 }
+
+
 
 .app-layout {
   display: grid;
