@@ -22,7 +22,7 @@ export default function Google_get_access_token() {
     // e.g., fetch('API_ENDPOINT', { headers: { 'Authorization': `${token_type} ${access_token}` }})
 
     axios
-      .post("/login/save_data_google", {
+      .post("/api/login/save_data_google", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

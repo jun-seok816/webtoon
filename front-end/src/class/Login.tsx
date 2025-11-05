@@ -31,6 +31,8 @@ export class LoginModalState {
   private iv_email = "";
   private iv_password = "";
   private iv_isSubmitting = false;
+  private iv_session: LoginSession | null = null;
+  private iv_isLoggingOut = false;
 
   constructor(forceRender: () => void, options?: LoginStateOptions) {
     this.iv_forceRender = forceRender;
@@ -54,6 +56,14 @@ export class LoginModalState {
 
   public get pt_isSubmitting() {
     return this.iv_isSubmitting;
+  }
+
+  public get pt_session() {
+    return this.iv_session;
+  }
+
+  public get pt_isLoggingOut() {
+    return this.iv_isLoggingOut;
   }
 
   public im_Open() {
@@ -126,14 +136,29 @@ export class LoginModalState {
 
   public async im_GetSession() {
     const { data } = await this.iv_client.get<LoginSession>("/loginSession");
+    this.iv_session = data;
+    this.iv_forceRender();
     return data;
   }
 
   public async im_Logout() {
-    const { data } = await this.iv_client.post<{
-      err: boolean;
-      loggedOut?: boolean;
-    }>("/logout");
-    return data;
+    if (this.iv_isLoggingOut) {
+      return { err: true, msg: "logout in progress" };
+    }
+    this.iv_isLoggingOut = true;
+    this.iv_forceRender();
+    try {
+      const { data } = await this.iv_client.post<{
+        err: boolean;
+        loggedOut?: boolean;
+      }>("/logout");
+      if (!data.err) {
+        this.iv_session = { loggedIn: false };
+      }
+      return data;
+    } finally {
+      this.iv_isLoggingOut = false;
+      this.iv_forceRender();
+    }
   }
 }

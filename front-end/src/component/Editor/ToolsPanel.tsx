@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Editor } from "./Layout";
 import "./ToolsPanel.scss";
 
@@ -14,6 +15,30 @@ const tools = [
 
 const ToolsPanel: React.FC<ToolsPanelProps> = ({ editor }) => {
   const activeTool = editor.pt_activeTool;
+  const navigate = useNavigate();
+  const loginStore = editor.pt_loginStore;
+  const session = loginStore.pt_session;
+  const isLoggingOut = loginStore.pt_isLoggingOut;
+  const isLoggedIn = session?.loggedIn ?? false;
+
+  useEffect(() => {
+    if (loginStore.pt_session == null) {
+      void loginStore.im_GetSession();
+    }
+  }, [loginStore]);
+
+  const handleLogout = async () => {
+    if (loginStore.pt_isLoggingOut) return;
+    try {
+      const { err } = await loginStore.im_Logout();
+      if (err) {
+        throw new Error("로그아웃에 실패했습니다.");
+      }
+      navigate("/login");
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   return (
     <div className="tools-panel">
@@ -28,6 +53,16 @@ const ToolsPanel: React.FC<ToolsPanelProps> = ({ editor }) => {
         </button>
       ))}
       <div className="tool-divider" />
+
+      <button
+        type="button"
+        className="tool-button tool-button--logout"
+        onClick={handleLogout}
+        disabled={isLoggingOut}
+        title="로그아웃"
+      >
+        <i className="bi bi-box-arrow-right" aria-hidden="true" />
+      </button>
     </div>
   );
 };

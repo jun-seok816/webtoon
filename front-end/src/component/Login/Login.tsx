@@ -222,8 +222,8 @@ const Login: React.FC = () => {
     <ReactModal
       isOpen={loginStore.pt_isOpen}
       onRequestClose={handleClose}
-      shouldCloseOnOverlayClick
-      shouldCloseOnEsc
+      shouldCloseOnOverlayClick={false}
+      shouldCloseOnEsc={false}
       className="login-modal"
       overlayClassName="login-overlay"
       contentLabel="로그인"

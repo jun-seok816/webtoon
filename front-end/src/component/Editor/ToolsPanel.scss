@@ -26,11 +26,28 @@
     border-color: rgba(90, 114, 242, 0.4);
     color: var(--accent-soft);
   }
+
+  &--logout {
+    color: rgba(239, 68, 68, 0.85);
+
+    &:hover {
+      color: #f87171;
+      background: rgba(239, 68, 68, 0.12);
+      border-color: rgba(239, 68, 68, 0.25);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      background: transparent;
+      border-color: transparent;
+    }
+  }
 }
 
 .tool-divider {
   width: 32px;
   height: 1px;
   background: var(--line);
-  margin: 0.35rem 0;
+  margin-top: auto;
 }

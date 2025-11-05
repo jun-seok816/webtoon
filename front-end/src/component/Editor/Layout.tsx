@@ -11,12 +11,14 @@ import "./Layout.scss";
 import { Main } from "@jsLib/class/Main_class";
 import { Upload } from "@jsLib/class/Upload";
 import { Loading } from "@jsLib/class/Loading";
+import { LoginModalState } from "@jsLib/class/Login";
 
 export class Editor extends Main {
   public iv_activeTool = "move";
   private iv_zoom = 100;
   private iv_upload: Upload;
   private iv_loading: Loading;
+  private iv_loginStore: LoginModalState;
   public iv_isFileModalOpen = false;
   public iv_selectedFiles: File[] = [];
   public iv_isUploading = false;
@@ -33,6 +35,9 @@ export class Editor extends Main {
       },
       "editor"
     );
+    this.iv_loginStore = new LoginModalState(() => {
+      this.im_forceRender();
+    });
   }
 
   public get pt_activeTool() {
@@ -66,6 +71,9 @@ export class Editor extends Main {
 
   public get pt_loading() {
     return this.iv_loading;
+  }
+  public get pt_loginStore() {
+    return this.iv_loginStore;
   }
 
   public get pt_isFileModalOpen() {
