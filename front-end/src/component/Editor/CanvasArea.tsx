@@ -1,61 +1,12 @@
 import React, {
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState
 } from "react";
 import { Editor } from "./Layout";
 import "./CanvasArea.scss";
-
-const LONG_IMAGE_WIDTH = 1000;
-const LONG_IMAGE_HEIGHT = 5400;
-
-const createLongImageSvg = () => {
-  const horizontalGuides = Array.from({ length: 18 })
-    .map((_, index) => {
-      const y = Math.round(((index + 1) * LONG_IMAGE_HEIGHT) / 18);
-      return `<line x1="80" y1="${y}" x2="${
-        LONG_IMAGE_WIDTH - 80
-      }" y2="${y}" />`;
-    })
-    .join("");
-
-  const sectionLabels = Array.from({ length: 9 })
-    .map((_, index) => {
-      const y = Math.round(((index + 1) * LONG_IMAGE_HEIGHT) / 9 - 24);
-      return `<text x="120" y="${y}">Panel ${index + 1}</text>`;
-    })
-    .join("");
-
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${LONG_IMAGE_WIDTH}" height="${LONG_IMAGE_HEIGHT}" viewBox="0 0 ${LONG_IMAGE_WIDTH} ${LONG_IMAGE_HEIGHT}">
-    <defs>
-      <linearGradient id="scroll-bg" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="#1f2330" />
-        <stop offset="50%" stop-color="#171b27" />
-        <stop offset="100%" stop-color="#11131b" />
-      </linearGradient>
-    </defs>
-    <rect width="100%" height="100%" fill="url(#scroll-bg)" />
-    <g stroke="#2b3242" stroke-width="1" opacity="0.45">
-      ${horizontalGuides}
-    </g>
-    <g stroke="rgba(255, 255, 255, 0.04)" stroke-width="1">
-      <rect x="72" y="120" width="${LONG_IMAGE_WIDTH - 144}" height="${
-    LONG_IMAGE_HEIGHT - 240
-  }" rx="36" />
-    </g>
-    <g font-family="Inter, sans-serif" font-size="48" fill="#4f5d75" opacity="0.45">
-      ${sectionLabels}
-    </g>
-    <g font-family="Inter, sans-serif" font-size="64" fill="#6476a1" opacity="0.55">
-      <text x="50%" y="180" text-anchor="middle">Storyboard Preview</text>
-    </g>
-  </svg>`;
-};
-
-const longImagePlaceholder = `data:image/svg+xml,${encodeURIComponent(
-  createLongImageSvg()
-)}`;
 
 interface NavigatorViewportMetrics {
   top: number;
@@ -68,6 +19,8 @@ interface CanvasAreaProps {
 
 const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
   const scrollViewportRef = useRef<HTMLDivElement | null>(null);
+  const selectedBatch = editor.pt_selectedUploadBatch;
+  const selectedItems = useMemo(() => selectedBatch?.items ?? [], [selectedBatch]);
   const [navigatorViewportMetrics, setNavigatorViewportMetrics] =
     useState<NavigatorViewportMetrics>({
       top: 0,
@@ -113,7 +66,15 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
 
   useEffect(() => {
     updateNavigatorViewport();
-  }, [zoom, updateNavigatorViewport]);
+  }, [zoom, selectedItems.length, selectedBatch?.id, updateNavigatorViewport]);
+
+  useEffect(() => {
+    const viewportElement = scrollViewportRef.current;
+    if (!viewportElement) {
+      return;
+    }
+    viewportElement.scrollTo({ top: 0 });
+  }, [selectedBatch?.id]);
 
   useEffect(() => {
     const viewportElement = scrollViewportRef.current;
@@ -173,14 +134,24 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
           <div className="scroll-viewer">
             <div className="scroll-viewer__frame">
               <div className="scroll-viewer__viewport" ref={scrollViewportRef}>
-                <img
-                  className="scroll-viewer__image"
-                  src={longImagePlaceholder}
-                  width={LONG_IMAGE_WIDTH}
-                  height={LONG_IMAGE_HEIGHT}
-                  alt="Storyboard preview"
-                  onLoad={handleImageLoad}
-                />
+                {selectedItems.length === 0 ? (
+                  <div className="scroll-viewer__empty-state">
+                    업로드 내역에서 배치를 선택하면 미리보기가 표시됩니다.
+                  </div>
+                ) : (
+                  <div className="scroll-viewer__image-stack">
+                    {selectedItems.map((item) => (
+                      <img
+                        key={item.id}
+                        className="scroll-viewer__image"
+                        src={item.url}
+                        alt={item.originalName}
+                        onLoad={handleImageLoad}
+                        onError={handleImageLoad}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>

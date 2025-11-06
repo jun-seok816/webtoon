@@ -44,6 +44,7 @@ const UploadHistoryModal: React.FC<UploadHistoryModalProps> = ({ editor }) => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const requestIdRef = useRef(0);
+  const selectedBatch = editor.pt_selectedUploadBatch;
 
   const handleClose = useCallback(() => {
     editor.iv_isUploadHistoryOpen = false;
@@ -104,6 +105,23 @@ const UploadHistoryModal: React.FC<UploadHistoryModalProps> = ({ editor }) => {
     void loadHistory();
   }, [loadHistory]);
 
+  const handleBatchSelect = useCallback(
+    (batch: UploadBatchDto) => {
+      editor.im_setSelectedUploadBatch(batch);
+    },
+    [editor]
+  );
+
+  const handleBatchKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLElement>, batch: UploadBatchDto) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        editor.im_setSelectedUploadBatch(batch);
+      }
+    },
+    [editor]
+  );
+
   return (
     <div
       className="menu-bar__modal-backdrop"
@@ -155,62 +173,72 @@ const UploadHistoryModal: React.FC<UploadHistoryModalProps> = ({ editor }) => {
             aria-busy={isLoading}
             aria-live="polite"
           >
-            {batches.map((batch) => (
-              <section
-                key={`${batch.id}-${batch.uuid}`}
-                className="menu-bar__history-batch"
-              >
-                <header className="menu-bar__history-batch-header">
-                  <div>
-                    <h3 className="menu-bar__history-batch-title">
-                      {batch.title ?? "제목 없음"}
-                    </h3>
-                    <p className="menu-bar__history-batch-subtitle">
-                      {batch.uuid}
-                    </p>
-                  </div>
-                  <div className="menu-bar__history-meta">
-                    <span className="menu-bar__history-chip">
-                      {getStatusLabel(batch.status)}
-                    </span>
-                    <span className="menu-bar__history-meta-text">
-                      {batch.fileCount}개 파일
-                    </span>
-                    <span className="menu-bar__history-meta-text">
-                      {formatBytes(batch.totalSize)}
-                    </span>
-                  </div>
-                </header>
-                <ul className="menu-bar__history-items">
-                  {batch.items.map((item) => (
-                    <li key={item.id} className="menu-bar__history-item">
-                      <div className="menu-bar__history-item-header">
-                        <span className="menu-bar__history-item-name">
-                          {item.originalName}
-                        </span>
-                        {item.convertedFromPsd && (
-                          <span className="menu-bar__history-chip menu-bar__history-chip--secondary">
-                            PSD → PNG
+            {batches.map((batch) => {
+              const isSelected = selectedBatch?.id === batch.id;
+              return (
+                <section
+                  key={`${batch.id}-${batch.uuid}`}
+                  className={`menu-bar__history-batch${
+                    isSelected ? " menu-bar__history-batch--selected" : ""
+                  }`}
+                  role="button"
+                  tabIndex={0}
+                  aria-pressed={isSelected}
+                  onClick={() => handleBatchSelect(batch)}
+                  onKeyDown={(event) => handleBatchKeyDown(event, batch)}
+                >
+                  <header className="menu-bar__history-batch-header">
+                    <div>
+                      <h3 className="menu-bar__history-batch-title">
+                        {batch.title ?? "제목 없음"}
+                      </h3>
+                      <p className="menu-bar__history-batch-subtitle">
+                        {batch.uuid}
+                      </p>
+                    </div>
+                    <div className="menu-bar__history-meta">
+                      <span className="menu-bar__history-chip">
+                        {getStatusLabel(batch.status)}
+                      </span>
+                      <span className="menu-bar__history-meta-text">
+                        {batch.fileCount}개 파일
+                      </span>
+                      <span className="menu-bar__history-meta-text">
+                        {formatBytes(batch.totalSize)}
+                      </span>
+                    </div>
+                  </header>
+                  <ul className="menu-bar__history-items">
+                    {batch.items.map((item) => (
+                      <li key={item.id} className="menu-bar__history-item">
+                        <div className="menu-bar__history-item-header">
+                          <span className="menu-bar__history-item-name">
+                            {item.originalName}
                           </span>
-                        )}
-                      </div>
-                      <div className="menu-bar__history-item-meta">
-                        <a
-                          href={item.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="menu-bar__history-link"
-                        >
-                          {item.filename}
-                        </a>
-                        <span>{item.mimetype}</span>
-                        <span>{formatBytes(item.size)}</span>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            ))}
+                          {item.convertedFromPsd && (
+                            <span className="menu-bar__history-chip menu-bar__history-chip--secondary">
+                              PSD → PNG
+                            </span>
+                          )}
+                        </div>
+                        <div className="menu-bar__history-item-meta">
+                          <a
+                            href={item.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="menu-bar__history-link"
+                          >
+                            {item.filename}
+                          </a>
+                          <span>{item.mimetype}</span>
+                          <span>{formatBytes(item.size)}</span>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              );
+            })}
           </div>
         </div>
       </div>

@@ -176,12 +176,34 @@
   border-radius: 999px;
 }
 
-.scroll-viewer__image {
+.scroll-viewer__image-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
   width: 100%;
+}
+
+.scroll-viewer__image {
+  max-width: min(940px, 100%);
   height: auto;
   display: block;
   border-radius: 10px;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+}
+
+.scroll-viewer__empty-state {
+  min-height: 320px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2rem;
+  border-radius: 12px;
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  color: var(--muted);
+  font-size: 0.9rem;
+  width: 100%;
 }
 
 .canvas-navigator {

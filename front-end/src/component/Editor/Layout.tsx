@@ -12,6 +12,7 @@ import { Main } from "@jsLib/class/Main_class";
 import { Upload } from "@jsLib/class/Upload";
 import { Loading } from "@jsLib/class/Loading";
 import { LoginModalState } from "@jsLib/class/Login";
+import type { UploadBatchDto } from "@shared/types/uploads";
 
 export class Editor extends Main {
   public iv_activeTool = "move";
@@ -24,6 +25,7 @@ export class Editor extends Main {
   public iv_selectedFiles: File[] = [];
   public iv_isUploading = false;
   public iv_uploadTitle = "";
+  public iv_selectedUploadBatch: UploadBatchDto | null = null;
 
   constructor() {
     super();
@@ -95,6 +97,18 @@ export class Editor extends Main {
 
   public get pt_uploadTitle() {
     return this.iv_uploadTitle;
+  }
+
+  public get pt_selectedUploadBatch() {
+    return this.iv_selectedUploadBatch;
+  }
+
+  public im_setSelectedUploadBatch(batch: UploadBatchDto | null) {
+    if (this.iv_selectedUploadBatch === batch) {
+      return;
+    }
+    this.iv_selectedUploadBatch = batch;
+    this.im_forceRender();
   }
 }
 

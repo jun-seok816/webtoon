@@ -282,6 +282,19 @@
   display: flex;
   flex-direction: column;
   gap: 0.65rem;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+
+  &:hover {
+    border-color: rgba(90, 114, 242, 0.4);
+    box-shadow: 0 0 0 1px rgba(90, 114, 242, 0.1);
+  }
+}
+
+.menu-bar__history-batch--selected {
+  border-color: rgba(90, 114, 242, 0.6);
+  box-shadow: 0 0 0 1px rgba(90, 114, 242, 0.35), 0 8px 20px rgba(0, 0, 0, 0.35);
+  transform: translateY(-1px);
 }
 
 .menu-bar__history-batch-header {
