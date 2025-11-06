@@ -2,11 +2,11 @@ import express, { Request, Response, NextFunction } from "express";
 const app = express();
 import bodyParser from "body-parser";
 import path from "path";
-import mysql, { Connection,Pool } from "mysql2";
+import mysql, { Connection, Pool } from "mysql2";
 import session from "express-session";
 var MySQLStore = require("express-mysql-session")(session);
 import cookieParser from "cookie-parser";
-import dotenv from 'dotenv';
+import dotenv from "dotenv";
 import uploadRouter from "./router/uploadRouter";
 import loginRouter from "./router/loginRouter";
 import Db from "./db";
@@ -23,9 +23,9 @@ declare global {
     }
   }
 
-  interface MyApp {        
-    db: Pool;        
-    checkSession:(req: Request, res: Response, next: NextFunction)=>void;
+  interface MyApp {
+    db: Pool;
+    checkSession: (req: Request, res: Response, next: NextFunction) => void;
   }
 }
 
@@ -39,26 +39,29 @@ declare module "express-session" {
   }
 }
 
-declare module 'express-serve-static-core' {
+declare module "express-serve-static-core" {
   interface Request {
     session: session.Session & Partial<session.SessionData>;
   }
 }
 
-const gf_cs = (req: Request, res: Response, next: NextFunction)=>{
-   // 세션에 userId가 없을 경우
-   if (!req.session || !req.session.userId) {
+const gf_cs = (req: Request, res: Response, next: NextFunction) => {
+  // 세션에 userId가 없을 경우
+  if (!req.session || !req.session.userId) {
     // 세션이 존재하지 않을 때
-    res.status(401).send('Unauthorized: No session available');
+    res.status(500).json({
+      success: false,
+      message: "세션 정보가 유효하지 않습니다.",
+    });
   } else {
     // 세션이 존재하면 다음 미들웨어로 넘어갑니다
     next();
   }
-}
+};
 
 process._myApp = {
   db: mysql.createPool(lv_Db.pt_Data.DB),
-  checkSession: gf_cs,  
+  checkSession: gf_cs,
 };
 
 //https://expressjs.com/ko/starter/static-files.html s
@@ -68,14 +71,12 @@ app.use(express.static(app.settings.puplic));
 app.use(bodyParser.json({ limit: "100mb" }));
 app.use(bodyParser.urlencoded({ limit: "100mb", extended: false }));
 
-
-
 app.use(cookieParser());
 var sessionStore = new MySQLStore(lv_Db.pt_Data.DB);
 const sessionMiddleware = session({
   secret: "subscribe_loutbtbahah4281!@",
   resave: true,
-  saveUninitialized: false,  
+  saveUninitialized: false,
   cookie: {
     maxAge: 24 * 60 * 60 * 1000 * 7, // 24 hours
   },
@@ -89,10 +90,9 @@ app.use("/api/login", loginRouter);
 // ② React 번들의 정적 파일
 app.use(
   express.static(path.join(__dirname, "../build"), {
-    index: false,                               // index.html 은 직접 라우트에서 전송
+    index: false, // index.html 은 직접 라우트에서 전송
   })
 );
-
 
 // ⑤ React SPA 용 catch‑all
 app.get("*", (_, res) => {
@@ -102,13 +102,18 @@ app.get("*", (_, res) => {
 console.log(
   "[routes]",
   app._router.stack
-    .filter((l: { route: any; }) => l.route)
-    .map((l: { route: { methods: {}; path: any; }; }) => `${Object.keys(l.route.methods)[0].toUpperCase()} ${l.route.path}`)
+    .filter((l: { route: any }) => l.route)
+    .map(
+      (l: { route: { methods: {}; path: any } }) =>
+        `${Object.keys(l.route.methods)[0].toUpperCase()} ${l.route.path}`
+    )
 );
 
-const server = app.listen(3003, () => {
-  console.log(`Example app listening on port ${3003}`);
-}).setTimeout(12000000);
+const server = app
+  .listen(3003, () => {
+    console.log(`Example app listening on port ${3003}`);
+  })
+  .setTimeout(12000000);
 
 server.keepAliveTimeout = 300; // Keep-Alive 연결 제한 시간
 server.headersTimeout = 11000; // 헤더 대기 시간

@@ -2,7 +2,7 @@ import axios from "axios";
 import React from "react";
 
 export default function Google_get_access_token() {
-  // Step 2: Handle the redirect callback
+  
   function handleRedirectCallback(): void {
     const {
       access_token,
@@ -11,15 +11,12 @@ export default function Google_get_access_token() {
       state,
     }: Record<string, string> = parseFragment();
 
-    // Do something with the access_token and other parameters
+    
     console.log("Access Token:", access_token);
     console.log("Token Type:", token_type);
     console.log("Expires In:", expires_in);
     console.log("State:", state);
     let lv_data = "google";
-
-    // You can make API requests using the access_token
-    // e.g., fetch('API_ENDPOINT', { headers: { 'Authorization': `${token_type} ${access_token}` }})
 
     axios
       .post("/api/login/save_data_google", {
@@ -48,7 +45,7 @@ export default function Google_get_access_token() {
       });
   }
 
-  // Utility function to parse the fragment parameters from the redirect URI
+  
   function parseFragment(): Record<string, string> {
     const fragment: Record<string, string> = {};
     const fragmentString: string = window.location.hash.substring(1);
@@ -65,7 +62,7 @@ export default function Google_get_access_token() {
     return fragment;
   }
 
-  // Handle the redirect callback
+  
   handleRedirectCallback();
 
   return <></>;

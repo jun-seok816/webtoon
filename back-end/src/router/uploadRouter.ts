@@ -5,8 +5,56 @@ import fs from "fs";
 import { v4 as uuidv4 } from "uuid";
 import { readPsd } from "ag-psd";
 import sharp from "sharp";
+import { OkPacket, RowDataPacket } from "mysql2/promise";
 
 type StoredFile = Express.Multer.File & { uniqueId?: string };
+type ProcessedUpload = {
+  id: string;
+  originalName: string;
+  filename: string;
+  storagePath: string;
+  mimetype: string;
+  size: number;
+  url: string;
+  convertedFromPsd: boolean;
+};
+
+type UploadListItem = {
+  id: string;
+  originalName: string;
+  filename: string;
+  url: string;
+  mimetype: string;
+  size: number;
+  convertedFromPsd: boolean;
+};
+
+type UploadBatchResponse = {
+  id: number;
+  uuid: string;
+  title: string | null;
+  status: string;
+  fileCount: number;
+  totalSize: number;
+  items: UploadListItem[];
+};
+
+type UploadRow = RowDataPacket & {
+  batch_id: number;
+  upload_uuid: string;
+  original_name: string;
+  stored_filename: string;
+  storage_path: string;
+  public_url: string;
+  mime_type: string;
+  file_size: number;
+  converted_from_psd: number;
+  batch_uuid: string;
+  title: string | null;
+  status: string;
+  file_count: number;
+  total_size: number;
+};
 
 const uploadRouter = Router();
 
@@ -47,6 +95,79 @@ const shouldConvertPsd = (file: StoredFile) => {
   );
 };
 
+uploadRouter.use((req, res, next) => process._myApp.checkSession(req, res, next));
+
+uploadRouter.get("/", async (req: Request, res: Response) => {
+  try {
+    const userId = req.session?.userId;
+
+    const [rows] = await process._myApp.db
+      .promise()
+      .query<UploadRow[]>(
+        `SELECT
+          u.batch_id,
+          u.upload_uuid,
+          u.original_name,
+          u.stored_filename,
+          u.storage_path,
+          u.public_url,
+          u.mime_type,
+          u.file_size,
+          u.converted_from_psd,
+          b.batch_uuid,
+          b.title,
+          b.status,
+          b.file_count,
+          b.total_size
+        FROM user_uploads AS u
+        INNER JOIN upload_batches AS b ON u.batch_id = b.id
+        WHERE u.user_id = ?
+        ORDER BY b.id DESC, u.upload_uuid ASC`,
+        [userId]
+      );
+
+    const batchesMap = new Map<number, UploadBatchResponse>();
+
+    rows.forEach((row) => {
+      if (!batchesMap.has(row.batch_id)) {
+        batchesMap.set(row.batch_id, {
+          id: row.batch_id,
+          uuid: row.batch_uuid,
+          title: row.title,
+          status: row.status,
+          fileCount: 0,
+          totalSize: 0,
+          items: [],
+        });
+      }
+
+      const batch = batchesMap.get(row.batch_id)!;
+      batch.items.push({
+        id: row.upload_uuid,
+        originalName: row.original_name,
+        filename: row.stored_filename,
+        url: row.public_url,
+        mimetype: row.mime_type,
+        size: row.file_size,
+        convertedFromPsd: Boolean(row.converted_from_psd),
+      });
+      batch.fileCount += 1;
+      batch.totalSize += row.file_size;
+    });
+
+    res.json({
+      success: true,
+      batches: Array.from(batchesMap.values()),
+    });
+  } catch (error) {
+    console.error("[upload] 업로드 목록 조회 실패", error);
+    res.status(500).json({
+      success: false,
+      message: "업로드 목록을 불러오는 중 오류가 발생했습니다.",
+    });
+  }
+});
+
 uploadRouter.post(
   "/",
   upload.array("images", 20),
@@ -61,75 +182,185 @@ uploadRouter.post(
       return;
     }
 
-    const title = (req.body?.title as string | undefined) ?? "";
+    const rawTitle = typeof req.body?.title === "string" ? req.body.title : undefined;
+    const normalizedTitle = rawTitle?.trim();
+    const title = normalizedTitle ? normalizedTitle : null;
 
-    const items = await Promise.all(
-      files.map(async (file) => {
-        const uniqueId = file.uniqueId ?? path.parse(file.filename).name;
+    try {
+      const userId = req.session?.userId;
 
-        if (shouldConvertPsd(file)) {
-          try {
-            const buffer = await fsp.readFile(file.path);
-            const psd = readPsd(buffer, { useImageData: true });
-            const pngFilename = `${uniqueId}.png`;
-            const outputPath = path.join(uploadRoot, pngFilename);
 
-            if (!psd.imageData) {
-              throw new Error("PSD 이미지 데이터를 읽어오지 못했습니다.");
+      const processed = await Promise.all(
+        files.map(async (file) => {
+          const uniqueId = file.uniqueId ?? path.parse(file.filename).name;
+
+          if (shouldConvertPsd(file)) {
+            try {
+              const buffer = await fsp.readFile(file.path);
+              const psd = readPsd(buffer, { useImageData: true });
+              const pngFilename = `${uniqueId}.png`;
+              const outputPath = path.join(uploadRoot, pngFilename);
+
+              if (!psd.imageData) {
+                throw new Error("PSD 이미지 데이터를 읽어오지 못했습니다.");
+              }
+
+              const { data, width, height } = psd.imageData;
+              const rawBuffer = Buffer.from(
+                data.buffer,
+                data.byteOffset,
+                data.byteLength
+              );
+
+              await sharp(rawBuffer, { raw: { width, height, channels: 4 } })
+                .resize({ width: 1000, fit: "inside", withoutEnlargement: true })
+                .png()
+                .toFile(outputPath);
+
+              await fsp.unlink(file.path).catch(() => undefined);
+
+              const stats = await fsp.stat(outputPath);
+
+              const item: ProcessedUpload = {
+                id: uniqueId,
+                originalName: file.originalname,
+                filename: pngFilename,
+                storagePath: outputPath,
+                mimetype: "image/png",
+                size: stats.size,
+                url: `/data/uploads/${pngFilename}`,
+                convertedFromPsd: true,
+              };
+              return item;
+            } catch (error) {
+              console.error("[upload] PSD 변환 실패", error);
             }
-
-            const { data, width, height } = psd.imageData;
-            const rawBuffer = Buffer.from(
-              data.buffer,
-              data.byteOffset,
-              data.byteLength
-            );
-
-            await sharp(rawBuffer, { raw: { width, height, channels: 4 } })
-              .resize({ width: 1000, fit: "inside", withoutEnlargement: true })
-              .png()
-              .toFile(outputPath);
-
-            await fsp.unlink(file.path).catch(() => undefined);
-
-            return {
-              id: uniqueId,
-              originalName: file.originalname,
-              filename: pngFilename,
-              mimetype: "image/png",
-              size: (await fsp.stat(outputPath)).size,
-              url: `/data/uploads/${pngFilename}`,
-              convertedFromPsd: true,
-            };
-          } catch (error) {
-            console.error("[upload] PSD 변환 실패", error);
           }
-        }
 
-        const tempPath = `${file.path}.tmp`;
-        await sharp(file.path)
-          .resize({ width: 1000, fit: "inside", withoutEnlargement: true })
-          .toFile(tempPath);
-        await fsp.rename(tempPath, file.path);
+          const tempPath = `${file.path}.tmp`;
+          await sharp(file.path)
+            .resize({ width: 1000, fit: "inside", withoutEnlargement: true })
+            .toFile(tempPath);
+          await fsp.rename(tempPath, file.path);
 
-        return {
-          id: uniqueId,
-          originalName: file.originalname,
-          filename: file.filename,
-          mimetype: file.mimetype,
-          size: (await fsp.stat(file.path)).size,
-          url: `/data/uploads/${file.filename}`,
-          convertedFromPsd: false,
-        };
-      })
-    );
+          const stats = await fsp.stat(file.path);
 
-    res.json({
-      success: true,
-      title,
-      count: items.length,
-      items,
-    });
+          const item: ProcessedUpload = {
+            id: uniqueId,
+            originalName: file.originalname,
+            filename: file.filename,
+            storagePath: file.path,
+            mimetype: file.mimetype,
+            size: stats.size,
+            url: `/data/uploads/${file.filename}`,
+            convertedFromPsd: false,
+          };
+          return item;
+        })
+      );
+
+      const items = processed.filter(
+        (item): item is ProcessedUpload => Boolean(item)
+      );
+
+      if (items.length === 0) {
+        res.status(500).json({
+          success: false,
+          message: "업로드한 파일을 처리하지 못했습니다.",
+        });
+        return;
+      }
+
+      const batchUuid = uuidv4();
+      const fileCount = items.length;
+      const totalSize = items.reduce((sum, item) => sum + item.size, 0);
+
+      const connection = await process._myApp.db.promise().getConnection();
+
+      try {
+        await connection.beginTransaction();
+
+        const [batchResult] = await connection.query<OkPacket>(
+          `INSERT INTO upload_batches (
+            user_id,
+            batch_uuid,
+            title,
+            status,
+            file_count,
+            total_size
+          ) VALUES (?, ?, ?, 'completed', ?, ?)`,
+          [userId, batchUuid, title, fileCount, totalSize]
+        );
+
+        const batchId = Number(batchResult.insertId);
+
+        const values = items.map((item) => [
+          userId,
+          batchId,
+          item.id,
+          item.originalName,
+          item.filename,
+          item.storagePath,
+          item.url,
+          item.mimetype,
+          item.size,
+          item.convertedFromPsd ? 1 : 0,
+        ]);
+
+        await connection.query<OkPacket>(
+          `INSERT INTO user_uploads (
+            user_id,
+            batch_id,
+            upload_uuid,
+            original_name,
+            stored_filename,
+            storage_path,
+            public_url,
+            mime_type,
+            file_size,
+            converted_from_psd
+          ) VALUES ?`,
+          [values]
+        );
+
+        await connection.commit();
+
+        res.json({
+          success: true,
+          batch: {
+            id: batchId,
+            uuid: batchUuid,
+            title,
+            fileCount,
+            totalSize,
+          },
+          items: items.map((item) => ({
+            id: item.id,
+            originalName: item.originalName,
+            filename: item.filename,
+            url: item.url,
+            mimetype: item.mimetype,
+            size: item.size,
+            convertedFromPsd: item.convertedFromPsd,
+          })),
+        });
+      } catch (error) {
+        await connection.rollback();
+        console.error("[upload] DB 저장 실패", error);
+        res.status(500).json({
+          success: false,
+          message: "업로드 정보를 저장하는 중 오류가 발생했습니다.",
+        });
+      } finally {
+        connection.release();
+      }
+    } catch (error) {
+      console.error("[upload] 처리 중 오류", error);
+      res.status(500).json({
+        success: false,
+        message: "업로드 처리 중 오류가 발생했습니다.",
+      });
+    }
   }
 );
 

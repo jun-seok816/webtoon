@@ -8,9 +8,8 @@ import throttle from "lodash/throttle";
 import { ImageItem, Upload } from "@jsLib/class/Upload";
 import { Loading } from "@jsLib/class/Loading";
 import { Editor } from "./Layout";
+import UploadHistoryModal from "./UploadHistoryModal";
 import "./MenuBar.scss";
-
-const menuItems = ["File", "Edit"];
 
 type MenuBarProps = {
   editor: Editor;
@@ -260,11 +259,15 @@ const FileUploadModal: React.FC<MenuBarProps> = ({ editor }) => {
   );
 };
 
+
 const MenuBar: React.FC<MenuBarProps> = ({ editor }) => {
   const upload: Upload | undefined = editor.pt_upload;
   const isFileModalOpen = editor.pt_isFileModalOpen;
+  const isUploadHistoryOpen = editor.pt_isUploadHistoryOpen;
+  const menuItems = ["File", "Edit", "Uploads"] as const;
 
   const handleFileMenuClick = () => {
+    editor.iv_isUploadHistoryOpen = false;
     editor.iv_uploadTitle = upload ? upload.pt_Title : "";
     editor.iv_selectedFiles = [];
     editor.iv_isUploading = false;
@@ -272,20 +275,36 @@ const MenuBar: React.FC<MenuBarProps> = ({ editor }) => {
     editor.im_forceRender();
   };
 
+  const handleUploadsMenuClick = () => {
+    editor.iv_isFileModalOpen = false;
+    editor.iv_isUploading = false;
+    editor.iv_isUploadHistoryOpen = true;
+    editor.im_forceRender();
+  };
+
   return (
     <>
       <nav className="menu-bar">
         <div className="menu-bar__group">
-          {menuItems.map((item) => (
-            <button
-              key={item}
-              type="button"
-              className="menu-item"
-              onClick={item === "File" ? handleFileMenuClick : undefined}
-            >
-              {item}
-            </button>
-          ))}
+          {menuItems.map((item) => {
+            const onClick =
+              item === "File"
+                ? handleFileMenuClick
+                : item === "Uploads"
+                ? handleUploadsMenuClick
+                : undefined;
+
+            return (
+              <button
+                key={item}
+                type="button"
+                className="menu-item"
+                onClick={onClick}
+              >
+                {item}
+              </button>
+            );
+          })}
         </div>
         <div className="menu-bar__workspace">
           <span className="workspace-label">Workspace:</span>
@@ -303,6 +322,7 @@ const MenuBar: React.FC<MenuBarProps> = ({ editor }) => {
         </div>
       </nav>
       {isFileModalOpen && <FileUploadModal editor={editor} />}
+      {isUploadHistoryOpen && <UploadHistoryModal editor={editor} />}
     </>
   );
 };

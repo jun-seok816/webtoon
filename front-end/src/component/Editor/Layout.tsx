@@ -20,6 +20,7 @@ export class Editor extends Main {
   private iv_loading: Loading;
   private iv_loginStore: LoginModalState;
   public iv_isFileModalOpen = false;
+  public iv_isUploadHistoryOpen = false;
   public iv_selectedFiles: File[] = [];
   public iv_isUploading = false;
   public iv_uploadTitle = "";
@@ -78,6 +79,10 @@ export class Editor extends Main {
 
   public get pt_isFileModalOpen() {
     return this.iv_isFileModalOpen;
+  }
+
+  public get pt_isUploadHistoryOpen() {
+    return this.iv_isUploadHistoryOpen;
   }
 
   public get pt_selectedFiles() {
