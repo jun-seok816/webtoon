@@ -142,6 +142,7 @@
       "@allType": ["../back-end/src/all_Types.ts"],
       "@allStore": ["../back-end/src/all_Store.ts"],
       "@BackEnd/*": ["../back-end/*"],
+      "@shared/*": ["../shared/*"],
       "@img": ["src/img"]
     },
 

@@ -1,35 +1,13 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import axios from "axios";
+import type {
+  UploadBatchDto,
+  UploadListResponseDto,
+} from "@shared/types/uploads";
 import { Editor } from "./Layout";
 
 type UploadHistoryModalProps = {
   editor: Editor;
-};
-
-type UploadListItem = {
-  id: string;
-  originalName: string;
-  filename: string;
-  url: string;
-  mimetype: string;
-  size: number;
-  convertedFromPsd: boolean;
-};
-
-type UploadBatchResponse = {
-  id: number;
-  uuid: string;
-  title: string | null;
-  status: string;
-  fileCount: number;
-  totalSize: number;
-  items: UploadListItem[];
-};
-
-type UploadHistoryResponse = {
-  success: boolean;
-  batches: UploadBatchResponse[];
-  message?: string;
 };
 
 const formatBytes = (bytes: number) => {
@@ -62,7 +40,7 @@ const getStatusLabel = (status: string) => {
 };
 
 const UploadHistoryModal: React.FC<UploadHistoryModalProps> = ({ editor }) => {
-  const [batches, setBatches] = useState<UploadBatchResponse[]>([]);
+  const [batches, setBatches] = useState<UploadBatchDto[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const requestIdRef = useRef(0);
@@ -78,18 +56,18 @@ const UploadHistoryModal: React.FC<UploadHistoryModalProps> = ({ editor }) => {
     setError(null);
 
     try {
-      const { data } = await axios.get<UploadHistoryResponse>("/api/uploads");
+      const { data } = await axios.get<UploadListResponseDto>("/api/uploads");
 
       if (requestId !== requestIdRef.current) {
         return;
       }
 
-      if (data?.success) {
+      if (data.success) {
         const nextBatches = Array.isArray(data.batches) ? data.batches : [];
         setBatches(nextBatches);
       } else {
         setBatches([]);
-        setError(data?.message ?? "업로드 내역을 불러오지 못했습니다.");
+        setError(data.message ?? "업로드 내역을 불러오지 못했습니다.");
       }
     } catch (caughtError) {
       if (requestId !== requestIdRef.current) {

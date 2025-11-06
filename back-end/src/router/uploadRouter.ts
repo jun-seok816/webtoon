@@ -6,6 +6,11 @@ import { v4 as uuidv4 } from "uuid";
 import { readPsd } from "ag-psd";
 import sharp from "sharp";
 import { OkPacket, RowDataPacket } from "mysql2/promise";
+import type {
+  UploadBatchDto,
+  UploadListItemDto,
+  UploadListResponseDto,
+} from "../../../shared/types/uploads";
 
 type StoredFile = Express.Multer.File & { uniqueId?: string };
 type ProcessedUpload = {
@@ -17,26 +22,6 @@ type ProcessedUpload = {
   size: number;
   url: string;
   convertedFromPsd: boolean;
-};
-
-type UploadListItem = {
-  id: string;
-  originalName: string;
-  filename: string;
-  url: string;
-  mimetype: string;
-  size: number;
-  convertedFromPsd: boolean;
-};
-
-type UploadBatchResponse = {
-  id: number;
-  uuid: string;
-  title: string | null;
-  status: string;
-  fileCount: number;
-  totalSize: number;
-  items: UploadListItem[];
 };
 
 type UploadRow = RowDataPacket & {
@@ -100,6 +85,14 @@ uploadRouter.use((req, res, next) => process._myApp.checkSession(req, res, next)
 uploadRouter.get("/", async (req: Request, res: Response) => {
   try {
     const userId = req.session?.userId;
+    if (!userId) {
+      const payload: UploadListResponseDto = {
+        success: false,
+        message: "세션 정보가 유효하지 않습니다.",
+      };
+      res.status(500).json(payload);
+      return;
+    }
 
     const [rows] = await process._myApp.db
       .promise()
@@ -126,7 +119,7 @@ uploadRouter.get("/", async (req: Request, res: Response) => {
         [userId]
       );
 
-    const batchesMap = new Map<number, UploadBatchResponse>();
+    const batchesMap = new Map<number, UploadBatchDto>();
 
     rows.forEach((row) => {
       if (!batchesMap.has(row.batch_id)) {
@@ -142,7 +135,7 @@ uploadRouter.get("/", async (req: Request, res: Response) => {
       }
 
       const batch = batchesMap.get(row.batch_id)!;
-      batch.items.push({
+      const item: UploadListItemDto = {
         id: row.upload_uuid,
         originalName: row.original_name,
         filename: row.stored_filename,
@@ -150,21 +143,25 @@ uploadRouter.get("/", async (req: Request, res: Response) => {
         mimetype: row.mime_type,
         size: row.file_size,
         convertedFromPsd: Boolean(row.converted_from_psd),
-      });
+      };
+      batch.items.push(item);
       batch.fileCount += 1;
       batch.totalSize += row.file_size;
     });
 
-    res.json({
+    const payload: UploadListResponseDto = {
       success: true,
       batches: Array.from(batchesMap.values()),
-    });
+    };
+
+    res.json(payload);
   } catch (error) {
     console.error("[upload] 업로드 목록 조회 실패", error);
-    res.status(500).json({
+    const payload: UploadListResponseDto = {
       success: false,
       message: "업로드 목록을 불러오는 중 오류가 발생했습니다.",
-    });
+    };
+    res.status(500).json(payload);
   }
 });
 

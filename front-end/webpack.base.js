@@ -24,6 +24,7 @@ module.exports = {
       "@allType": path.resolve(__dirname, "../back-end/src/all_Types.ts"),
       "@allStore": path.resolve(__dirname, "../back-end/src/all_Store.ts"),
       "@BackEnd": path.resolve(__dirname, "../back-end"),
+      "@shared": path.resolve(__dirname, "../shared"),
       "@img": path.resolve(__dirname, "src/img"),
     },
     fallback: { console: false, fs: false },
