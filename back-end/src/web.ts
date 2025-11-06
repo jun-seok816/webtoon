@@ -9,6 +9,7 @@ import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import uploadRouter from "./router/uploadRouter";
 import loginRouter from "./router/loginRouter";
+import fileRouter from "./router/fileRouter";
 import Db from "./db";
 
 // .env 파일에서 환경 변수 로드
@@ -83,7 +84,13 @@ const sessionMiddleware = session({
 });
 
 app.use(sessionMiddleware);
-app.use("/data", express.static(path.join(__dirname, "../../data")));
+app.use("/data", fileRouter);
+app.use(
+  "/data",
+  express.static(path.join(__dirname, "../../data"), {
+    index: false,
+  })
+);
 app.use("/api/uploads", uploadRouter);
 app.use("/api/login", loginRouter);
 
