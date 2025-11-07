@@ -207,35 +207,7 @@ const UploadHistoryModal: React.FC<UploadHistoryModalProps> = ({ editor }) => {
                         {formatBytes(batch.totalSize)}
                       </span>
                     </div>
-                  </header>
-                  <ul className="menu-bar__history-items">
-                    {batch.items.map((item) => (
-                      <li key={item.id} className="menu-bar__history-item">
-                        <div className="menu-bar__history-item-header">
-                          <span className="menu-bar__history-item-name">
-                            {item.originalName}
-                          </span>
-                          {item.convertedFromPsd && (
-                            <span className="menu-bar__history-chip menu-bar__history-chip--secondary">
-                              PSD → PNG
-                            </span>
-                          )}
-                        </div>
-                        <div className="menu-bar__history-item-meta">
-                          <a
-                            href={item.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="menu-bar__history-link"
-                          >
-                            {item.filename}
-                          </a>
-                          <span>{item.mimetype}</span>
-                          <span>{formatBytes(item.size)}</span>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
+                  </header>         
                 </section>
               );
             })}

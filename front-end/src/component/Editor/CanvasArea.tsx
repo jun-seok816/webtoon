@@ -3,7 +3,7 @@ import React, {
   useEffect,
   useMemo,
   useRef,
-  useState
+  useState,
 } from "react";
 import { Editor } from "./Layout";
 import "./CanvasArea.scss";
@@ -19,13 +19,19 @@ interface CanvasAreaProps {
 
 const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
   const scrollViewportRef = useRef<HTMLDivElement | null>(null);
+  const imageRefs = useRef<Map<string | number, HTMLImageElement>>(new Map());
   const selectedBatch = editor.pt_selectedUploadBatch;
-  const selectedItems = useMemo(() => selectedBatch?.items ?? [], [selectedBatch]);
+  const selectedItems = useMemo(
+    () => selectedBatch?.items ?? [],
+    [selectedBatch]
+  );
   const [navigatorViewportMetrics, setNavigatorViewportMetrics] =
     useState<NavigatorViewportMetrics>({
       top: 0,
-      height: 18
+      height: 18,
     });
+  const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   const zoom = editor.pt_zoom || 100;
   const navigatorViewportScale = Math.max(0.25, Math.min(1.3, 100 / zoom));
@@ -38,8 +44,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
 
     const { scrollTop, scrollHeight, clientHeight } = viewportElement;
     const scrollableHeight = Math.max(scrollHeight - clientHeight, 0);
-    const scrollRatio =
-      scrollableHeight > 0 ? scrollTop / scrollableHeight : 0;
+    const scrollRatio = scrollableHeight > 0 ? scrollTop / scrollableHeight : 0;
     const visibleRatio = scrollHeight > 0 ? clientHeight / scrollHeight : 1;
     const clampedVisibleRatio = Math.min(Math.max(visibleRatio, 0.06), 1);
     const heightPercent = clampedVisibleRatio * 100;
@@ -55,7 +60,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
       }
       return {
         top: topPercent,
-        height: heightPercent
+        height: heightPercent,
       };
     });
   }, []);
@@ -63,6 +68,46 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
   const handleImageLoad = useCallback(() => {
     updateNavigatorViewport();
   }, [updateNavigatorViewport]);
+
+  const setImageRef = useCallback(
+    (id: string | number, element: HTMLImageElement | null) => {
+      if (element) {
+        imageRefs.current.set(id, element);
+      } else {
+        imageRefs.current.delete(id);
+      }
+    },
+    []
+  );
+
+  const scrollImageIntoView = useCallback((id: string | number) => {
+    const viewport = scrollViewportRef.current;
+    const imageElement = imageRefs.current.get(id);
+    if (!viewport || !imageElement) {
+      return;
+    }
+
+    const imageTop = imageElement.offsetTop;
+    const imageBottom = imageTop + imageElement.offsetHeight;
+    const currentScrollTop = viewport.scrollTop;
+    const viewportHeight = viewport.clientHeight;
+
+    if (imageTop < currentScrollTop) {
+      viewport.scrollTo({ top: imageTop, behavior: "smooth" });
+    } else if (imageBottom > currentScrollTop + viewportHeight) {
+      viewport.scrollTo({
+        top: imageBottom - viewportHeight,
+        behavior: "smooth",
+      });
+    }
+  }, []);
+
+  const handleTabClick = useCallback(
+    (id: string | number) => {
+      scrollImageIntoView(id);
+    },
+    [scrollImageIntoView]
+  );
 
   useEffect(() => {
     updateNavigatorViewport();
@@ -74,6 +119,11 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
       return;
     }
     viewportElement.scrollTo({ top: 0 });
+  }, [selectedBatch?.id]);
+
+  useEffect(() => {
+    setDraggingIndex(null);
+    setDragOverIndex(null);
   }, [selectedBatch?.id]);
 
   useEffect(() => {
@@ -110,23 +160,105 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
     };
   }, [updateNavigatorViewport]);
 
+  const handleTabDragStart = useCallback(
+    (event: React.DragEvent<HTMLButtonElement>, index: number) => {
+      if (selectedItems.length < 2) {
+        event.preventDefault();
+        return;
+      }
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.setData("text/plain", String(index));
+      setDraggingIndex(index);
+      setDragOverIndex(index);
+    },
+    [selectedItems.length]
+  );
+
+  const handleTabDragOver = useCallback(
+    (event: React.DragEvent<HTMLButtonElement>, index: number) => {
+      if (draggingIndex === null) {
+        return;
+      }
+      event.preventDefault();
+      event.dataTransfer.dropEffect = "move";
+      if (index !== dragOverIndex) {
+        setDragOverIndex(index);
+      }
+    },
+    [dragOverIndex, draggingIndex]
+  );
+
+  const handleTabDrop = useCallback(
+    (event: React.DragEvent<HTMLButtonElement>, index: number) => {
+      if (draggingIndex === null) {
+        return;
+      }
+      event.preventDefault();
+      if (draggingIndex !== index) {
+        editor.im_reorderSelectedUploadItems(draggingIndex, index);
+      }
+      setDraggingIndex(null);
+      setDragOverIndex(null);
+    },
+    [draggingIndex, editor]
+  );
+
+  const handleTabDragLeave = useCallback(
+    (event: React.DragEvent<HTMLButtonElement>, index: number) => {
+      if (draggingIndex === null) {
+        return;
+      }
+      const nextTarget = event.relatedTarget as HTMLElement | null;
+      const isMovingInsideSameTab =
+        nextTarget?.closest(".document-tab") === event.currentTarget;
+      if (!isMovingInsideSameTab && dragOverIndex === index) {
+        setDragOverIndex(null);
+      }
+    },
+    [dragOverIndex, draggingIndex]
+  );
+
+  const handleTabDragEnd = useCallback(() => {
+    setDraggingIndex(null);
+    setDragOverIndex(null);
+  }, []);
+
   return (
     <section className="canvas-area">
       <div className="canvas-header">
         <div className="document-tabs">
-          <button className="document-tab active">
-            <span className="document-tab__name">webtoon-editor.psd</span>
-            <span className="document-tab__meta">RGB/8 • 3000 x 5400</span>
-          </button>
-          <button className="document-tab">
-            <span className="document-tab__name">character-sketch.psd</span>
-            <span className="document-tab__meta">RGB/8 • 2480 x 3508</span>
-          </button>
-          <button className="document-tab">
-            <span className="document-tab__name">logo.ai</span>
-            <span className="document-tab__meta">CMYK • 1200 x 630</span>
-          </button>
-        </div>        
+          {selectedItems.map((item, index) => {
+            const isDragging = index === draggingIndex;
+            const isDropTarget =
+              draggingIndex !== null &&
+              !isDragging &&
+              index === dragOverIndex;
+            const tabClassName = [
+              "document-tab",
+              isDragging ? "document-tab--dragging" : "",
+              isDropTarget ? "document-tab--drop-target" : "",
+            ]
+              .filter(Boolean)
+              .join(" ");
+            return (
+              <button
+                key={item.id}
+                type="button"
+                className={tabClassName}
+                draggable={selectedItems.length > 1}
+                onClick={() => handleTabClick(item.id)}
+                onDragStart={(event) => handleTabDragStart(event, index)}
+                onDragOver={(event) => handleTabDragOver(event, index)}
+                onDrop={(event) => handleTabDrop(event, index)}
+                onDragLeave={(event) => handleTabDragLeave(event, index)}
+                onDragEnd={handleTabDragEnd}
+              >
+                <span className="document-tab__name">{item.filename}</span>
+                <span className="document-tab__meta">{item.mimetype}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       <div className="canvas-body">
@@ -146,6 +278,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
                         className="scroll-viewer__image"
                         src={item.url}
                         alt={item.originalName}
+                        ref={(element) => setImageRef(item.id, element)}
                         onLoad={handleImageLoad}
                         onError={handleImageLoad}
                       />
@@ -171,7 +304,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
                   style={{
                     transform: `scaleY(${navigatorViewportScale})`,
                     top: `${navigatorViewportMetrics.top}%`,
-                    height: `${navigatorViewportMetrics.height}%`
+                    height: `${navigatorViewportMetrics.height}%`,
                   }}
                 />
               </div>

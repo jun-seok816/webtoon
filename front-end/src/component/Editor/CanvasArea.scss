@@ -48,6 +48,17 @@
     color: var(--text);
   }
 
+  &--dragging {
+    opacity: 0.6;
+    cursor: grabbing;
+  }
+
+  &--drop-target {
+    border-color: var(--accent);
+    background: rgba(90, 114, 242, 0.22);
+    color: var(--text);
+  }
+
   &__meta {
     font-size: 0.65rem;
     color: var(--muted);
@@ -139,7 +150,7 @@
 }
 
 .scroll-viewer__viewport {
-  max-height: min(72vh, 1200px);
+  max-height: min(73vh, 1200px);
   overflow-y: auto;
   overflow-x: hidden;
   border-radius: 14px;
@@ -179,16 +190,14 @@
 .scroll-viewer__image-stack {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 1.25rem;
+  align-items: center;  
   width: 100%;
 }
 
 .scroll-viewer__image {
   max-width: min(940px, 100%);
   height: auto;
-  display: block;
-  border-radius: 10px;
+  display: block;  
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
 }
 

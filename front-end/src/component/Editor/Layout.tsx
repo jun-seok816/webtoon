@@ -110,6 +110,38 @@ export class Editor extends Main {
     this.iv_selectedUploadBatch = batch;
     this.im_forceRender();
   }
+
+  public im_reorderSelectedUploadItems(
+    sourceIndex: number,
+    destinationIndex: number
+  ) {
+    if (!this.iv_selectedUploadBatch) {
+      return;
+    }
+
+    const items = this.iv_selectedUploadBatch.items;
+    const maxIndex = items.length - 1;
+    if (
+      sourceIndex === destinationIndex ||
+      sourceIndex < 0 ||
+      destinationIndex < 0 ||
+      sourceIndex > maxIndex ||
+      destinationIndex > maxIndex
+    ) {
+      return;
+    }
+
+    const updatedItems = [...items];
+    const [movedItem] = updatedItems.splice(sourceIndex, 1);
+    updatedItems.splice(destinationIndex, 0, movedItem);
+
+    this.iv_selectedUploadBatch = {
+      ...this.iv_selectedUploadBatch,
+      items: updatedItems,
+    };
+
+    this.im_forceRender();
+  }
 }
 
 const Layout: React.FC = () => {
