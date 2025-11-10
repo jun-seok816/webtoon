@@ -5,14 +5,15 @@ import OptionsBar from "./OptionsBar";
 import CanvasArea from "./CanvasArea";
 import RightPanels from "./RightPanels";
 import TitleBar from "./TitleBar";
-import StatusBar from "./StatusBar";
 import "./EditorBase.scss";
 import "./Layout.scss";
 import { Main } from "@jsLib/class/Main_class";
 import { Upload } from "@jsLib/class/Upload";
 import { Loading } from "@jsLib/class/Loading";
 import { LoginModalState } from "@jsLib/class/Login";
-import type { UploadBatchDto } from "@shared/types/uploads";
+import type { UploadBatchDto, UploadListResponseDto } from "@shared/types/uploads";
+import axios from "axios";
+import { useNavigate } from "react-router";
 
 export class Editor extends Main {
   public iv_activeTool = "move";
@@ -26,18 +27,16 @@ export class Editor extends Main {
   public iv_isUploading = false;
   public iv_uploadTitle = "";
   public iv_selectedUploadBatch: UploadBatchDto | null = null;
+  public iv_uploadBatchDto : UploadBatchDto[];
 
   constructor() {
     super();
     this.iv_upload = new Upload(() => {
       this.im_forceRender();
     });
-    this.iv_loading = new Loading(
-      () => {
-        this.im_forceRender();
-      },
-      "editor"
-    );
+    this.iv_loading = new Loading(() => {
+      this.im_forceRender();
+    }, "editor");
     this.iv_loginStore = new LoginModalState(() => {
       this.im_forceRender();
     });
@@ -111,6 +110,16 @@ export class Editor extends Main {
     this.im_forceRender();
   }
 
+  public async im_loadHistory() {
+    const { data } = await axios.get<UploadListResponseDto>("/api/uploads");
+    if(data.success){
+      this.iv_uploadBatchDto = data.batches;
+    }else{
+      Main.im_toast(data.message ?? "업로드 내역을 불러오지 못했습니다.","error");
+    }
+    return data;
+  }
+
   public im_reorderSelectedUploadItems(
     sourceIndex: number,
     destinationIndex: number
@@ -146,8 +155,13 @@ export class Editor extends Main {
 
 const Layout: React.FC = () => {
   const [editor] = useState(() => new Editor());
-
-  editor.im_Prepare_Hooks(() => {});
+  editor.iv_navigate = useNavigate();
+  editor.im_Prepare_Hooks(async () => {
+    await editor.pt_loginStore.im_GetSession();
+    if(!editor.pt_loginStore.pt_session?.loggedIn){
+      editor.im_navigate('/login');
+    }
+  });
 
   return (
     <div className="app-layout">
@@ -156,8 +170,7 @@ const Layout: React.FC = () => {
       <OptionsBar editor={editor} />
       <ToolsPanel editor={editor} />
       <CanvasArea editor={editor} />
-      <RightPanels editor={editor} />
-      <StatusBar editor={editor} />
+      <RightPanels editor={editor} />      
     </div>
   );
 };

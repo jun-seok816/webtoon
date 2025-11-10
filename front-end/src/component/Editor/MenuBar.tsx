@@ -1,9 +1,4 @@
-import React, {
-  ChangeEvent,
-  useCallback,
-  useEffect,
-  useMemo,
-} from "react";
+import React, { ChangeEvent, useCallback, useEffect, useMemo } from "react";
 import throttle from "lodash/throttle";
 import { ImageItem, Upload } from "@jsLib/class/Upload";
 import { Loading } from "@jsLib/class/Loading";
@@ -145,7 +140,9 @@ const FileUploadModal: React.FC<MenuBarProps> = ({ editor }) => {
           if (!event.total) {
             return;
           }
-          ensuredLoading.iv_per = Math.round((event.loaded / event.total) * 100);
+          ensuredLoading.iv_per = Math.round(
+            (event.loaded / event.total) * 100
+          );
           ensuredUpload.im_forceRender();
         },
       });
@@ -154,7 +151,10 @@ const FileUploadModal: React.FC<MenuBarProps> = ({ editor }) => {
         const count = appendedCount;
         Editor.im_toast(`${count}개 파일 업로드 완료`, "success");
       } else {
-        Editor.im_toast("이미지 업로드가 완료되었는지 확인이 필요합니다.", "info");
+        Editor.im_toast(
+          "이미지 업로드가 완료되었는지 확인이 필요합니다.",
+          "info"
+        );
       }
     } catch (error) {
       console.error(error);
@@ -259,7 +259,6 @@ const FileUploadModal: React.FC<MenuBarProps> = ({ editor }) => {
   );
 };
 
-
 const MenuBar: React.FC<MenuBarProps> = ({ editor }) => {
   const upload: Upload | undefined = editor.pt_upload;
   const isFileModalOpen = editor.pt_isFileModalOpen;
@@ -281,6 +280,8 @@ const MenuBar: React.FC<MenuBarProps> = ({ editor }) => {
     editor.iv_isUploadHistoryOpen = true;
     editor.im_forceRender();
   };
+
+  const selectedBatch = editor.pt_selectedUploadBatch;
 
   return (
     <>
@@ -313,7 +314,11 @@ const MenuBar: React.FC<MenuBarProps> = ({ editor }) => {
             <option value="layout">Layout</option>
             <option value="color">Color</option>
           </select>
-          <button className="menu-icon" title="Customize workspace" type="button">
+          <button
+            className="menu-icon"
+            title="Customize workspace"
+            type="button"
+          >
             <i className="bi bi-columns-gap" aria-hidden="true" />
           </button>
           <button className="menu-icon" title="Search commands" type="button">

@@ -50,7 +50,6 @@ export class Main {
     useEffect(p_Callback, p_data);
   }
 
-
   public im_UnMounted(p_Callback: () => void) {
     useEffect(() => {
       return p_Callback;

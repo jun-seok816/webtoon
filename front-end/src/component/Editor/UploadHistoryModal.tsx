@@ -5,6 +5,7 @@ import type {
   UploadListResponseDto,
 } from "@shared/types/uploads";
 import { Editor } from "./Layout";
+import { aw } from "react-router/dist/development/register-DCE0tH5m";
 
 type UploadHistoryModalProps = {
   editor: Editor;
@@ -57,7 +58,7 @@ const UploadHistoryModal: React.FC<UploadHistoryModalProps> = ({ editor }) => {
     setError(null);
 
     try {
-      const { data } = await axios.get<UploadListResponseDto>("/api/uploads");
+      const data = await editor.im_loadHistory();
 
       if (requestId !== requestIdRef.current) {
         return;
@@ -107,6 +108,7 @@ const UploadHistoryModal: React.FC<UploadHistoryModalProps> = ({ editor }) => {
 
   const handleBatchSelect = useCallback(
     (batch: UploadBatchDto) => {
+      handleClose();
       editor.im_setSelectedUploadBatch(batch);
     },
     [editor]
@@ -116,6 +118,7 @@ const UploadHistoryModal: React.FC<UploadHistoryModalProps> = ({ editor }) => {
     (event: React.KeyboardEvent<HTMLElement>, batch: UploadBatchDto) => {
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
+        handleClose();
         editor.im_setSelectedUploadBatch(batch);
       }
     },
@@ -207,7 +210,7 @@ const UploadHistoryModal: React.FC<UploadHistoryModalProps> = ({ editor }) => {
                         {formatBytes(batch.totalSize)}
                       </span>
                     </div>
-                  </header>         
+                  </header>
                 </section>
               );
             })}
