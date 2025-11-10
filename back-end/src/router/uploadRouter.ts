@@ -11,6 +11,7 @@ import type {
   UploadListItemDto,
   UploadListResponseDto,
 } from "../../../shared/types/uploads";
+import { readTestUploadBatches } from "../services/testUploads";
 
 type StoredFile = Express.Multer.File & { uniqueId?: string };
 type ProcessedUpload = {
@@ -131,6 +132,7 @@ uploadRouter.get("/", async (req: Request, res: Response) => {
           fileCount: 0,
           totalSize: 0,
           items: [],
+          isTest: false,
         });
       }
 
@@ -160,6 +162,24 @@ uploadRouter.get("/", async (req: Request, res: Response) => {
     const payload: UploadListResponseDto = {
       success: false,
       message: "업로드 목록을 불러오는 중 오류가 발생했습니다.",
+    };
+    res.status(500).json(payload);
+  }
+});
+
+uploadRouter.get("/test", async (_req: Request, res: Response) => {
+  try {
+    const batches = await readTestUploadBatches();
+    const payload: UploadListResponseDto = {
+      success: true,
+      batches,
+    };
+    res.json(payload);
+  } catch (error) {
+    console.error("[upload] 테스트 배치 조회 실패", error);
+    const payload: UploadListResponseDto = {
+      success: false,
+      message: "테스트 배치를 불러오는 중 오류가 발생했습니다.",
     };
     res.status(500).json(payload);
   }

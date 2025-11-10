@@ -16,6 +16,7 @@ export type UploadBatchDto = {
   fileCount: number;
   totalSize: number;
   items: UploadListItemDto[];
+  isTest: boolean;
 };
 
 export type UploadListSuccessDto = {

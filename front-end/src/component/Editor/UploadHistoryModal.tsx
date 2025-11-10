@@ -1,15 +1,18 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import axios from "axios";
-import type {
-  UploadBatchDto,
-  UploadListResponseDto,
-} from "@shared/types/uploads";
+import type { UploadBatchDto } from "@shared/types/uploads";
 import { Editor } from "./Layout";
-import { aw } from "react-router/dist/development/register-DCE0tH5m";
 
 type UploadHistoryModalProps = {
   editor: Editor;
 };
+
+type HistoryTab = "user" | "test";
+
+const historyTabs: { value: HistoryTab; label: string }[] = [
+  { value: "user", label: "내 업로드" },
+  { value: "test", label: "테스트 배치" },
+];
 
 const formatBytes = (bytes: number) => {
   if (!Number.isFinite(bytes) || bytes <= 0) {
@@ -35,6 +38,8 @@ const getStatusLabel = (status: string) => {
       return "처리 중";
     case "failed":
       return "실패";
+    case "test":
+      return "테스트";
     default:
       return status;
   }
@@ -44,6 +49,7 @@ const UploadHistoryModal: React.FC<UploadHistoryModalProps> = ({ editor }) => {
   const [batches, setBatches] = useState<UploadBatchDto[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<HistoryTab>("user");
   const requestIdRef = useRef(0);
   const selectedBatch = editor.pt_selectedUploadBatch;
 
@@ -52,66 +58,88 @@ const UploadHistoryModal: React.FC<UploadHistoryModalProps> = ({ editor }) => {
     editor.im_forceRender();
   }, [editor]);
 
-  const loadHistory = useCallback(async () => {
-    const requestId = ++requestIdRef.current;
-    setIsLoading(true);
-    setError(null);
+  const loadHistory = useCallback(
+    async (variant: HistoryTab) => {
+      const requestId = ++requestIdRef.current;
+      setIsLoading(true);
+      setError(null);
 
-    try {
-      const data = await editor.im_loadHistory();
+      try {
+        const data = await editor.im_loadHistory(variant);
 
-      if (requestId !== requestIdRef.current) {
-        return;
-      }
+        if (requestId !== requestIdRef.current) {
+          return;
+        }
 
-      if (data.success) {
-        const nextBatches = Array.isArray(data.batches) ? data.batches : [];
-        setBatches(nextBatches);
-      } else {
+        if (data.success) {
+          const nextBatches = Array.isArray(data.batches) ? data.batches : [];
+          setBatches(nextBatches);
+        } else {
+          setBatches([]);
+          const fallbackMessage =
+            variant === "test"
+              ? "테스트 배치를 불러오지 못했습니다."
+              : "업로드 내역을 불러오지 못했습니다.";
+          setError(data.message ?? fallbackMessage);
+        }
+      } catch (caughtError) {
+        if (requestId !== requestIdRef.current) {
+          return;
+        }
+
         setBatches([]);
-        setError(data.message ?? "업로드 내역을 불러오지 못했습니다.");
-      }
-    } catch (caughtError) {
-      if (requestId !== requestIdRef.current) {
-        return;
-      }
 
-      setBatches([]);
-
-      if (axios.isAxiosError(caughtError)) {
-        const fallbackMessage = "업로드 내역을 불러오지 못했습니다.";
-        const responseMessage = (
-          caughtError.response?.data as { message?: string } | undefined
-        )?.message;
-        setError(responseMessage ?? fallbackMessage);
-      } else {
-        setError("업로드 내역을 불러오지 못했습니다.");
+        if (axios.isAxiosError(caughtError)) {
+          const fallbackMessage =
+            variant === "test"
+              ? "테스트 배치를 불러오지 못했습니다."
+              : "업로드 내역을 불러오지 못했습니다.";
+          const responseMessage = (
+            caughtError.response?.data as { message?: string } | undefined
+          )?.message;
+          setError(responseMessage ?? fallbackMessage);
+        } else {
+          setError("업로드 내역을 불러오지 못했습니다.");
+        }
+      } finally {
+        if (requestId !== requestIdRef.current) {
+          return;
+        }
+        setIsLoading(false);
       }
-    } finally {
-      if (requestId !== requestIdRef.current) {
-        return;
-      }
-      setIsLoading(false);
-    }
-  }, []);
+    },
+    [editor]
+  );
 
   useEffect(() => {
-    void loadHistory();
+    void loadHistory(activeTab);
     return () => {
       requestIdRef.current += 1;
     };
-  }, [loadHistory]);
+  }, [activeTab, loadHistory]);
 
   const handleRefresh = useCallback(() => {
-    void loadHistory();
-  }, [loadHistory]);
+    void loadHistory(activeTab);
+  }, [activeTab, loadHistory]);
+
+  const handleTabChange = useCallback(
+    (nextTab: HistoryTab) => {
+      if (nextTab === activeTab) {
+        return;
+      }
+      setBatches([]);
+      setError(null);
+      setActiveTab(nextTab);
+    },
+    [activeTab]
+  );
 
   const handleBatchSelect = useCallback(
     (batch: UploadBatchDto) => {
       handleClose();
       editor.im_setSelectedUploadBatch(batch);
     },
-    [editor]
+    [editor, handleClose]
   );
 
   const handleBatchKeyDown = useCallback(
@@ -122,8 +150,16 @@ const UploadHistoryModal: React.FC<UploadHistoryModalProps> = ({ editor }) => {
         editor.im_setSelectedUploadBatch(batch);
       }
     },
-    [editor]
+    [editor, handleClose]
   );
+
+  const summaryText = isLoading
+    ? activeTab === "test"
+      ? "테스트 배치를 불러오는 중입니다..."
+      : "업로드 내역을 불러오는 중입니다..."
+    : activeTab === "test"
+    ? `총 ${batches.length}개의 테스트 배치`
+    : `총 ${batches.length}개의 업로드 배치`;
 
   return (
     <div
@@ -146,11 +182,33 @@ const UploadHistoryModal: React.FC<UploadHistoryModalProps> = ({ editor }) => {
         </header>
         <div className="menu-bar__modal-body menu-bar__history-body">
           <div className="menu-bar__history-toolbar">
-            <span className="menu-bar__history-summary">
-              {isLoading
-                ? "업로드 내역을 불러오는 중입니다..."
-                : `총 ${batches.length}개의 업로드 배치`}
-            </span>
+            <div className="menu-bar__history-toolbar-left">
+              <span className="menu-bar__history-summary">{summaryText}</span>
+              <div className="menu-bar__history-tabs" role="tablist">
+                {historyTabs.map((tab) => {
+                  const isActive = activeTab === tab.value;
+                  return (
+                    <button
+                      key={tab.value}
+                      type="button"
+                      role="tab"
+                      aria-selected={isActive}
+                      className={`menu-bar__history-tab${
+                        isActive ? " is-active" : ""
+                      }`}
+                      onClick={() => handleTabChange(tab.value)}
+                    >
+                      {tab.label}
+                      {tab.value === "test" && (
+                        <span className="menu-bar__history-chip menu-bar__history-chip--warning">
+                          TEST
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
             <button
               type="button"
               className="menu-bar__history-refresh"
@@ -168,7 +226,9 @@ const UploadHistoryModal: React.FC<UploadHistoryModalProps> = ({ editor }) => {
           )}
           {!error && !isLoading && batches.length === 0 && (
             <div className="menu-bar__history-message">
-              아직 업로드한 파일이 없습니다.
+              {activeTab === "test"
+                ? "제공 가능한 테스트 배치가 없습니다."
+                : "아직 업로드한 파일이 없습니다."}
             </div>
           )}
           <div
@@ -203,6 +263,11 @@ const UploadHistoryModal: React.FC<UploadHistoryModalProps> = ({ editor }) => {
                       <span className="menu-bar__history-chip">
                         {getStatusLabel(batch.status)}
                       </span>
+                      {batch.isTest && (
+                        <span className="menu-bar__history-chip menu-bar__history-chip--warning">
+                          TEST
+                        </span>
+                      )}
                       <span className="menu-bar__history-meta-text">
                         {batch.fileCount}개 파일
                       </span>

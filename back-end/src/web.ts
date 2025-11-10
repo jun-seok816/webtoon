@@ -91,6 +91,12 @@ app.use(
     index: false,
   })
 );
+app.use(
+  "/static/test-uploads",
+  express.static(path.join(__dirname, "../../data/test_uploads"), {
+    index: false,
+  })
+);
 app.use("/api/uploads", uploadRouter);
 app.use("/api/login", loginRouter);
 

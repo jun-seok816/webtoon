@@ -27,7 +27,8 @@ export class Editor extends Main {
   public iv_isUploading = false;
   public iv_uploadTitle = "";
   public iv_selectedUploadBatch: UploadBatchDto | null = null;
-  public iv_uploadBatchDto : UploadBatchDto[];
+  public iv_uploadBatchDto: UploadBatchDto[] = [];
+  public iv_testUploadBatchDto: UploadBatchDto[] = [];
 
   constructor() {
     super();
@@ -110,12 +111,21 @@ export class Editor extends Main {
     this.im_forceRender();
   }
 
-  public async im_loadHistory() {
-    const { data } = await axios.get<UploadListResponseDto>("/api/uploads");
-    if(data.success){
-      this.iv_uploadBatchDto = data.batches;
-    }else{
-      Main.im_toast(data.message ?? "업로드 내역을 불러오지 못했습니다.","error");
+  public async im_loadHistory(mode: "user" | "test" = "user") {
+    const endpoint = mode === "test" ? "/api/uploads/test" : "/api/uploads";
+    const { data } = await axios.get<UploadListResponseDto>(endpoint);
+    if (data.success) {
+      if (mode === "test") {
+        this.iv_testUploadBatchDto = data.batches;
+      } else {
+        this.iv_uploadBatchDto = data.batches;
+      }
+    } else {
+      const fallback =
+        mode === "test"
+          ? "테스트 배치를 불러오지 못했습니다."
+          : "업로드 내역을 불러오지 못했습니다.";
+      Main.im_toast(data.message ?? fallback, "error");
     }
     return data;
   }
