@@ -4,6 +4,7 @@ import type {
   UploadBatchDto,
   UploadListItemDto,
 } from "../../../shared/types/uploads";
+import { randomUUID } from "crypto";
 
 const TEST_UPLOAD_ROOT = path.join(__dirname, "../../data/test_uploads");
 const fsp = fs.promises;
@@ -47,71 +48,45 @@ const safeReadDir = async (directory: string) => {
   }
 };
 
-const toPublicUrl = (batchName: string, fileName: string) => {
-  return `/static/test-uploads/${encodeURIComponent(
-    batchName
-  )}/${encodeURIComponent(fileName)}`;
-};
 
 export const readTestUploadBatches = async (): Promise<UploadBatchDto[]> => {
   const directories = await safeReadDir(TEST_UPLOAD_ROOT);
-  const batches: UploadBatchDto[] = [];
-  let virtualId = -1;
+  const batches: UploadBatchDto = {
+    items: [],
+    id: -1,
+    uuid: randomUUID(),
+    title: "테스트 작업환경",
+    status: "completed",
+    fileCount: 2,
+    totalSize: 0,
+    isTest: true,
+  };  
 
-  for (const entry of directories) {
-    if (!entry.isDirectory()) {
+  for (const fileEntry of directories) {
+    if (!fileEntry.isFile()) {
       continue;
     }
 
-    const batchName = entry.name;
-    const batchPath = path.join(TEST_UPLOAD_ROOT, batchName);
-    const files = await safeReadDir(batchPath);
-    const items: UploadListItemDto[] = [];
-    let totalSize = 0;
-
-    for (const fileEntry of files) {
-      if (!fileEntry.isFile()) {
-        continue;
-      }
-
-      const extension = path.extname(fileEntry.name).toLowerCase();
-      if (!allowedExtensions.has(extension)) {
-        continue;
-      }
-
-      const absolutePath = path.join(batchPath, fileEntry.name);
-      const stats = await fsp.stat(absolutePath);
-
-      totalSize += stats.size;
-      const item: UploadListItemDto = {
-        id: `${batchName}-${fileEntry.name}`,
-        originalName: fileEntry.name,
-        filename: fileEntry.name,
-        url: toPublicUrl(batchName, fileEntry.name),
-        mimetype: getMimeType(extension),
-        size: stats.size,
-        convertedFromPsd: false,
-      };
-      items.push(item);
-    }
-
-    if (items.length === 0) {
+    const extension = path.extname(fileEntry.name).toLowerCase();
+    if (!allowedExtensions.has(extension)) {
       continue;
     }
 
-    items.sort((a, b) => a.filename.localeCompare(b.filename, "ko"));
+    const absolutePath = path.join(TEST_UPLOAD_ROOT, fileEntry.name);
+    const stats = await fsp.stat(absolutePath);
 
-    batches.push({
-      id: virtualId--,
-      uuid: `test-${batchName}`,
-      title: batchName,
-      status: "test",
-      fileCount: items.length,
-      totalSize,
-      items,
-      isTest: true,
-    });
+    batches.totalSize += stats.size;
+    const item: UploadListItemDto = {
+      id: `${fileEntry.name}`,
+      originalName: fileEntry.name,
+      filename: fileEntry.name,
+      url: path.posix.join("/data/test_uploads/", fileEntry.name),
+      mimetype: getMimeType(extension),
+      size: stats.size,
+      convertedFromPsd: false,
+    };
+    batches.items.push(item);
   }
 
-  return batches;
+  return [batches];
 };

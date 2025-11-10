@@ -74,6 +74,17 @@ app.use(bodyParser.urlencoded({ limit: "100mb", extended: false }));
 
 app.use(cookieParser());
 var sessionStore = new MySQLStore(lv_Db.pt_Data.DB);
+app.use(
+  session({
+    secret: "subscribe_loutbtbahah4281!@",
+    resave: true,
+    saveUninitialized: false,
+    store: sessionStore,
+    cookie: {
+      maxAge: 24 * 60 * 60 * 1000 * 1, // 24 hours
+    },
+  })
+);
 const sessionMiddleware = session({
   secret: "subscribe_loutbtbahah4281!@",
   resave: true,
@@ -88,12 +99,6 @@ app.use("/data", fileRouter);
 app.use(
   "/data",
   express.static(path.join(__dirname, "../../data"), {
-    index: false,
-  })
-);
-app.use(
-  "/static/test-uploads",
-  express.static(path.join(__dirname, "../../data/test_uploads"), {
     index: false,
   })
 );
