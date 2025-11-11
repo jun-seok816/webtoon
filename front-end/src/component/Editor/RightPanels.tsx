@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import PanelTab from "./PanelTab";
 import { Editor } from "./Layout";
 import "./RightPanels.scss";
+import { SketchPicker } from "react-color";
+import type { ColorResult } from "react-color";
 
 const layerItems = [
   { id: "layer-3", name: "Speech Bubble", info: "Blend: Screen • 80%", isLocked: false },
@@ -25,6 +27,8 @@ interface RightPanelsProps {
 const RightPanels: React.FC<RightPanelsProps> = ({ editor }) => {
   void editor;
   const [activeTab, setActiveTab] = useState<"layers" | "properties" | "history">("layers");
+  const [blendColor, setBlendColor] = useState("#ffffff");
+  const [isBlendPickerOpen, setBlendPickerOpen] = useState(false);
 
   return (
     <aside className="right-panels">
@@ -47,36 +51,54 @@ const RightPanels: React.FC<RightPanelsProps> = ({ editor }) => {
           onClick={() => setActiveTab("history")}
           icon="bi-clock-history"
         />
-      </div>
-      <div className="panel-toolbar">
-        <button title="Collapse all panels">
-          <i className="bi bi-chevron-bar-down" aria-hidden="true" />
-        </button>
-        <button title="Panel options">
-          <i className="bi bi-list" aria-hidden="true" />
-        </button>
-      </div>
+      </div>      
       <div className="panel-content">
         {activeTab === "layers" && (
           <div className="panel-stack">
             <div className="panel-section panel-section--compact">
               <div className="panel-section__header">
                 <span>Blend</span>
-                <select defaultValue="normal">
-                  <option value="normal">Normal</option>
-                  <option value="multiply">Multiply</option>
-                  <option value="screen">Screen</option>
-                  <option value="overlay">Overlay</option>
-                </select>
+              </div>
+              <div className="blend-control">
+                <button
+                  type="button"
+                  className="blend-control__swatch"
+                  style={{ backgroundColor: blendColor }}
+                  aria-label="현재 블렌드 색상 선택"
+                  onClick={() => setBlendPickerOpen((previous) => !previous)}
+                />
+                <span className="blend-control__value">{blendColor.toUpperCase()}</span>
+                <button
+                  type="button"
+                  className="blend-control__toggle"
+                  onClick={() => setBlendPickerOpen((previous) => !previous)}
+                >
+                  Pick
+                </button>
+                {isBlendPickerOpen && (
+                  <div className="blend-control__popover">
+                    <SketchPicker
+                      color={blendColor}
+                      onChange={(color: ColorResult) => setBlendColor(color.hex)}
+                      onChangeComplete={(color: ColorResult) => {
+                        setBlendColor(color.hex);
+                        setBlendPickerOpen(false);
+                      }}
+                      disableAlpha
+                    />
+                    <button
+                      type="button"
+                      className="blend-control__close"
+                      onClick={() => setBlendPickerOpen(false)}
+                    >
+                      Close
+                    </button>
+                  </div>
+                )}
               </div>
               <div className="panel-row">
                 <label htmlFor="layer-opacity">Opacity</label>
                 <input id="layer-opacity" type="number" defaultValue={100} />
-                %
-              </div>
-              <div className="panel-row">
-                <label htmlFor="layer-fill">Fill</label>
-                <input id="layer-fill" type="number" defaultValue={100} />
                 %
               </div>
             </div>

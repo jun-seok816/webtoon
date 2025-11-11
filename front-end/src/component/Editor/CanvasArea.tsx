@@ -20,14 +20,6 @@ interface CanvasAreaProps {
   editor: Editor;
 }
 
-const DEFAULT_CROP: Crop = {
-  unit: "%",
-  x: 10,
-  y: 10,
-  width: 16,
-  height: 10,
-};
-
 
 const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
   const scrollViewportRef = useRef<HTMLDivElement | null>(null);
@@ -36,105 +28,9 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
   const selectedItems = useMemo(
     () => selectedBatch?.items ?? [],
     [selectedBatch]
-  );
-  const [navigatorViewportMetrics, setNavigatorViewportMetrics] =
-    useState<NavigatorViewportMetrics>({
-      top: 0,
-      height: 18,
-    });
+  );  
+  const [crop, setCrop] = useState<Crop | undefined>(undefined);
 
-  const zoom = editor.pt_zoom || 100;
-  const navigatorViewportScale = Math.max(0.25, Math.min(1.3, 100 / zoom));
-  const [crop, setCrop] = useState<Crop | undefined>(DEFAULT_CROP);
-  const updateNavigatorViewport = useCallback(() => {
-    const viewportElement = scrollViewportRef.current;
-    if (!viewportElement) {
-      return;
-    }
-
-    const { scrollTop, scrollHeight, clientHeight } = viewportElement;
-    const scrollableHeight = Math.max(scrollHeight - clientHeight, 0);
-    const scrollRatio = scrollableHeight > 0 ? scrollTop / scrollableHeight : 0;
-    const visibleRatio = scrollHeight > 0 ? clientHeight / scrollHeight : 1;
-    const clampedVisibleRatio = Math.min(Math.max(visibleRatio, 0.06), 1);
-    const heightPercent = clampedVisibleRatio * 100;
-    const maxTop = Math.max(100 - heightPercent, 0);
-    const topPercent = scrollRatio * maxTop;
-
-    setNavigatorViewportMetrics((previous) => {
-      if (
-        Math.abs(previous.top - topPercent) < 0.1 &&
-        Math.abs(previous.height - heightPercent) < 0.1
-      ) {
-        return previous;
-      }
-      return {
-        top: topPercent,
-        height: heightPercent,
-      };
-    });
-  }, []);
-
-  const handleImageLoad = useCallback(() => {
-    updateNavigatorViewport();
-  }, [updateNavigatorViewport]);
-
-  const setImageRef = useCallback(
-    (id: string | number, element: HTMLImageElement | null) => {
-      if (element) {
-        imageRefs.current.set(id, element);
-      } else {
-        imageRefs.current.delete(id);
-      }
-    },
-    []
-  );
-
-  useEffect(() => {
-    updateNavigatorViewport();
-  }, [zoom, selectedItems.length, selectedBatch?.id, updateNavigatorViewport]);
-
-  useEffect(() => {
-    const viewportElement = scrollViewportRef.current;
-    if (!viewportElement) {
-      return;
-    }
-    viewportElement.scrollTo({ top: 0 });
-  }, [selectedBatch?.id]);
-
-  useEffect(() => {
-    const viewportElement = scrollViewportRef.current;
-    if (!viewportElement) {
-      return;
-    }
-
-    const handleScroll = () => {
-      updateNavigatorViewport();
-    };
-
-    viewportElement.addEventListener("scroll", handleScroll);
-
-    let resizeObserver: ResizeObserver | null = null;
-    if (typeof ResizeObserver !== "undefined") {
-      resizeObserver = new ResizeObserver(() => {
-        updateNavigatorViewport();
-      });
-      resizeObserver.observe(viewportElement);
-    }
-
-    const handleWindowResize = () => {
-      updateNavigatorViewport();
-    };
-    window.addEventListener("resize", handleWindowResize);
-
-    updateNavigatorViewport();
-
-    return () => {
-      viewportElement.removeEventListener("scroll", handleScroll);
-      window.removeEventListener("resize", handleWindowResize);
-      resizeObserver?.disconnect();
-    };
-  }, [updateNavigatorViewport]);
 
   return (
     <section className="canvas-area">
@@ -169,10 +65,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
                         <img
                           className="scroll-viewer__image"
                           src={item.url}
-                          alt={item.originalName}
-                          ref={(element) => setImageRef(item.id, element)}
-                          onLoad={handleImageLoad}
-                          onError={handleImageLoad}
+                          alt={item.originalName}                                              
                         />
                       </ReactCrop>
                     ))}
