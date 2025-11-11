@@ -7,6 +7,9 @@ import React, {
 } from "react";
 import { Editor } from "./Layout";
 import "./CanvasArea.scss";
+import ReactCrop, { type PercentCrop } from "react-image-crop";
+import "react-image-crop/dist/ReactCrop.css";
+import DocumentTabs from "./DocumentTabs";
 
 interface NavigatorViewportMetrics {
   top: number;
@@ -30,11 +33,19 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
       top: 0,
       height: 18,
     });
-  const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
-  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   const zoom = editor.pt_zoom || 100;
   const navigatorViewportScale = Math.max(0.25, Math.min(1.3, 100 / zoom));
+  const defaultCrop = useMemo<PercentCrop>(
+    () => ({
+      unit: "%",
+      x: 0,
+      y: 0,
+      width: 100,
+      height: 100,
+    }),
+    []
+  );
 
   const updateNavigatorViewport = useCallback(() => {
     const viewportElement = scrollViewportRef.current;
@@ -122,11 +133,6 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
   }, [selectedBatch?.id]);
 
   useEffect(() => {
-    setDraggingIndex(null);
-    setDragOverIndex(null);
-  }, [selectedBatch?.id]);
-
-  useEffect(() => {
     const viewportElement = scrollViewportRef.current;
     if (!viewportElement) {
       return;
@@ -160,105 +166,21 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
     };
   }, [updateNavigatorViewport]);
 
-  const handleTabDragStart = useCallback(
-    (event: React.DragEvent<HTMLButtonElement>, index: number) => {
-      if (selectedItems.length < 2) {
-        event.preventDefault();
-        return;
-      }
-      event.dataTransfer.effectAllowed = "move";
-      event.dataTransfer.setData("text/plain", String(index));
-      setDraggingIndex(index);
-      setDragOverIndex(index);
+  const handleTabReorder = useCallback(
+    (sourceIndex: number, destinationIndex: number) => {
+      editor.im_reorderSelectedUploadItems(sourceIndex, destinationIndex);
     },
-    [selectedItems.length]
+    [editor]
   );
-
-  const handleTabDragOver = useCallback(
-    (event: React.DragEvent<HTMLButtonElement>, index: number) => {
-      if (draggingIndex === null) {
-        return;
-      }
-      event.preventDefault();
-      event.dataTransfer.dropEffect = "move";
-      if (index !== dragOverIndex) {
-        setDragOverIndex(index);
-      }
-    },
-    [dragOverIndex, draggingIndex]
-  );
-
-  const handleTabDrop = useCallback(
-    (event: React.DragEvent<HTMLButtonElement>, index: number) => {
-      if (draggingIndex === null) {
-        return;
-      }
-      event.preventDefault();
-      if (draggingIndex !== index) {
-        editor.im_reorderSelectedUploadItems(draggingIndex, index);
-      }
-      setDraggingIndex(null);
-      setDragOverIndex(null);
-    },
-    [draggingIndex, editor]
-  );
-
-  const handleTabDragLeave = useCallback(
-    (event: React.DragEvent<HTMLButtonElement>, index: number) => {
-      if (draggingIndex === null) {
-        return;
-      }
-      const nextTarget = event.relatedTarget as HTMLElement | null;
-      const isMovingInsideSameTab =
-        nextTarget?.closest(".document-tab") === event.currentTarget;
-      if (!isMovingInsideSameTab && dragOverIndex === index) {
-        setDragOverIndex(null);
-      }
-    },
-    [dragOverIndex, draggingIndex]
-  );
-
-  const handleTabDragEnd = useCallback(() => {
-    setDraggingIndex(null);
-    setDragOverIndex(null);
-  }, []);
 
   return (
     <section className="canvas-area">
       <div className="canvas-header">
-        <div className="document-tabs">
-          {selectedItems.map((item, index) => {
-            const isDragging = index === draggingIndex;
-            const isDropTarget =
-              draggingIndex !== null &&
-              !isDragging &&
-              index === dragOverIndex;
-            const tabClassName = [
-              "document-tab",
-              isDragging ? "document-tab--dragging" : "",
-              isDropTarget ? "document-tab--drop-target" : "",
-            ]
-              .filter(Boolean)
-              .join(" ");
-            return (
-              <button
-                key={item.id}
-                type="button"
-                className={tabClassName}
-                draggable={selectedItems.length > 1}
-                onClick={() => handleTabClick(item.id)}
-                onDragStart={(event) => handleTabDragStart(event, index)}
-                onDragOver={(event) => handleTabDragOver(event, index)}
-                onDrop={(event) => handleTabDrop(event, index)}
-                onDragLeave={(event) => handleTabDragLeave(event, index)}
-                onDragEnd={handleTabDragEnd}
-              >
-                <span className="document-tab__name">{item.filename}</span>
-                <span className="document-tab__meta">{item.mimetype}</span>
-              </button>
-            );
-          })}
-        </div>
+        <DocumentTabs
+          items={selectedItems}
+          onTabClick={handleTabClick}
+          onReorder={handleTabReorder}
+        />
       </div>
 
       <div className="canvas-body">
@@ -273,15 +195,21 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
                 ) : (
                   <div className="scroll-viewer__image-stack">
                     {selectedItems.map((item) => (
-                      <img
+                      <ReactCrop
                         key={item.id}
-                        className="scroll-viewer__image"
-                        src={item.url}
-                        alt={item.originalName}
-                        ref={(element) => setImageRef(item.id, element)}
-                        onLoad={handleImageLoad}
-                        onError={handleImageLoad}
-                      />
+                        className="scroll-viewer__crop"
+                        keepSelection                        
+                        onChange={() => undefined}
+                      >
+                        <img
+                          className="scroll-viewer__image"
+                          src={item.url}
+                          alt={item.originalName}
+                          ref={(element) => setImageRef(item.id, element)}
+                          onLoad={handleImageLoad}
+                          onError={handleImageLoad}
+                        />
+                      </ReactCrop>
                     ))}
                   </div>
                 )}

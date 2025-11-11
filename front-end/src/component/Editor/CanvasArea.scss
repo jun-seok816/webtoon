@@ -222,8 +222,16 @@
 .scroll-viewer__image {
   max-width: min(940px, 100%);
   height: auto;
-  display: block;
+  display: block;  
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+}
+
+.scroll-viewer__crop {
+  width: 100%;
+
+  .ReactCrop__image {
+    max-width: 100%;
+  }
 }
 
 .scroll-viewer__empty-state {
