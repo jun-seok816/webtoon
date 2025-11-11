@@ -16,7 +16,7 @@ import axios from "axios";
 import { useNavigate } from "react-router";
 
 export class Editor extends Main {
-  public iv_activeTool = "move";
+  public iv_activeTool = "crop";
   private iv_zoom = 100;
   private iv_upload: Upload;
   private iv_loading: Loading;

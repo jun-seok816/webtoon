@@ -7,7 +7,7 @@ import React, {
 } from "react";
 import { Editor } from "./Layout";
 import "./CanvasArea.scss";
-import ReactCrop, { type PercentCrop } from "react-image-crop";
+import ReactCrop, { Crop, type PercentCrop } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
 import DocumentTabs from "./DocumentTabs";
 
@@ -19,6 +19,15 @@ interface NavigatorViewportMetrics {
 interface CanvasAreaProps {
   editor: Editor;
 }
+
+const DEFAULT_CROP: Crop = {
+  unit: "%",
+  x: 10,
+  y: 10,
+  width: 16,
+  height: 10,
+};
+
 
 const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
   const scrollViewportRef = useRef<HTMLDivElement | null>(null);
@@ -36,17 +45,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
 
   const zoom = editor.pt_zoom || 100;
   const navigatorViewportScale = Math.max(0.25, Math.min(1.3, 100 / zoom));
-  const defaultCrop = useMemo<PercentCrop>(
-    () => ({
-      unit: "%",
-      x: 0,
-      y: 0,
-      width: 100,
-      height: 100,
-    }),
-    []
-  );
-
+  const [crop, setCrop] = useState<Crop | undefined>(DEFAULT_CROP);
   const updateNavigatorViewport = useCallback(() => {
     const viewportElement = scrollViewportRef.current;
     if (!viewportElement) {
@@ -89,35 +88,6 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
       }
     },
     []
-  );
-
-  const scrollImageIntoView = useCallback((id: string | number) => {
-    const viewport = scrollViewportRef.current;
-    const imageElement = imageRefs.current.get(id);
-    if (!viewport || !imageElement) {
-      return;
-    }
-
-    const imageTop = imageElement.offsetTop;
-    const imageBottom = imageTop + imageElement.offsetHeight;
-    const currentScrollTop = viewport.scrollTop;
-    const viewportHeight = viewport.clientHeight;
-
-    if (imageTop < currentScrollTop) {
-      viewport.scrollTo({ top: imageTop, behavior: "smooth" });
-    } else if (imageBottom > currentScrollTop + viewportHeight) {
-      viewport.scrollTo({
-        top: imageBottom - viewportHeight,
-        behavior: "smooth",
-      });
-    }
-  }, []);
-
-  const handleTabClick = useCallback(
-    (id: string | number) => {
-      scrollImageIntoView(id);
-    },
-    [scrollImageIntoView]
   );
 
   useEffect(() => {
@@ -166,20 +136,13 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
     };
   }, [updateNavigatorViewport]);
 
-  const handleTabReorder = useCallback(
-    (sourceIndex: number, destinationIndex: number) => {
-      editor.im_reorderSelectedUploadItems(sourceIndex, destinationIndex);
-    },
-    [editor]
-  );
-
   return (
     <section className="canvas-area">
       <div className="canvas-header">
         <DocumentTabs
-          items={selectedItems}
-          onTabClick={handleTabClick}
-          onReorder={handleTabReorder}
+          editor={editor}
+          scrollViewportRef={scrollViewportRef}
+          imageRefs={imageRefs}
         />
       </div>
 
@@ -196,10 +159,12 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
                   <div className="scroll-viewer__image-stack">
                     {selectedItems.map((item) => (
                       <ReactCrop
+                        crop={crop}
                         key={item.id}
                         className="scroll-viewer__crop"
-                        keepSelection                        
-                        onChange={() => undefined}
+                        onDragEnd={() => setCrop(undefined)}
+                        onChange={(nextCrop) => setCrop(nextCrop)}
+                        onComplete={()=>{}}                        
                       >
                         <img
                           className="scroll-viewer__image"
@@ -217,7 +182,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
             </div>
           </div>
         </div>
-        <aside className="canvas-navigator">
+        {/* <aside className="canvas-navigator">
           <div className="navigator-header">
             <span>Navigator</span>
             <button aria-label="Navigator options">
@@ -238,7 +203,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
               </div>
             </div>
           </div>
-        </aside>
+        </aside> */}
       </div>
     </section>
   );

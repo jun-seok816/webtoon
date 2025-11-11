@@ -1,28 +1,64 @@
 import React, { useCallback, useEffect, useState } from "react";
-import type { UploadListItemDto } from "@shared/types/uploads";
+import type { Editor } from "./Layout";
 
 interface DocumentTabsProps {
-  items: UploadListItemDto[];
-  onTabClick: (id: string | number) => void;
-  onReorder: (sourceIndex: number, destinationIndex: number) => void;
+  editor: Editor;
+  scrollViewportRef: React.RefObject<HTMLDivElement | null>;
+  imageRefs: React.MutableRefObject<
+    Map<string | number, HTMLImageElement>
+  >;
 }
 
 const DocumentTabs: React.FC<DocumentTabsProps> = ({
-  items,
-  onTabClick,
-  onReorder,
+  editor,
+  scrollViewportRef,
+  imageRefs,
 }) => {
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const selectedItems = editor.pt_selectedUploadBatch?.items ?? [];
+  const selectedBatchId = editor.pt_selectedUploadBatch?.id;
 
   useEffect(() => {
     setDraggingIndex(null);
     setDragOverIndex(null);
-  }, [items]);
+  }, [selectedBatchId, selectedItems.length]);
+
+  const scrollImageIntoView = useCallback(
+    (id: string | number) => {
+      const viewport = scrollViewportRef.current;
+      const imageElement = imageRefs.current.get(id);
+      if (!viewport || !imageElement) {
+        return;
+      }
+
+      const imageTop = imageElement.offsetTop;
+      const imageBottom = imageTop + imageElement.offsetHeight;
+      const currentScrollTop = viewport.scrollTop;
+      const viewportHeight = viewport.clientHeight;
+
+      if (imageTop < currentScrollTop) {
+        viewport.scrollTo({ top: imageTop, behavior: "smooth" });
+      } else if (imageBottom > currentScrollTop + viewportHeight) {
+        viewport.scrollTo({
+          top: imageBottom - viewportHeight,
+          behavior: "smooth",
+        });
+      }
+    },
+    [imageRefs, scrollViewportRef]
+  );
+
+  const handleTabClick = useCallback(
+    (id: string | number) => {
+      scrollImageIntoView(id);
+    },
+    [scrollImageIntoView]
+  );
 
   const handleTabDragStart = useCallback(
     (event: React.DragEvent<HTMLButtonElement>, index: number) => {
-      if (items.length < 2) {
+      if (selectedItems.length < 2) {
         event.preventDefault();
         return;
       }
@@ -31,7 +67,7 @@ const DocumentTabs: React.FC<DocumentTabsProps> = ({
       setDraggingIndex(index);
       setDragOverIndex(index);
     },
-    [items]
+    [selectedItems.length]
   );
 
   const handleTabDragOver = useCallback(
@@ -55,12 +91,12 @@ const DocumentTabs: React.FC<DocumentTabsProps> = ({
       }
       event.preventDefault();
       if (draggingIndex !== index) {
-        onReorder(draggingIndex, index);
+        editor.im_reorderSelectedUploadItems(draggingIndex, index);
       }
       setDraggingIndex(null);
       setDragOverIndex(null);
     },
-    [draggingIndex, onReorder]
+    [draggingIndex, editor]
   );
 
   const handleTabDragLeave = useCallback(
@@ -85,7 +121,7 @@ const DocumentTabs: React.FC<DocumentTabsProps> = ({
 
   return (
     <div className="document-tabs">
-      {items.map((item, index) => {
+      {selectedItems.map((item, index) => {
         const isDragging = index === draggingIndex;
         const isDropTarget =
           draggingIndex !== null && !isDragging && index === dragOverIndex;
@@ -101,8 +137,8 @@ const DocumentTabs: React.FC<DocumentTabsProps> = ({
             key={item.id}
             type="button"
             className={tabClassName}
-            draggable={items.length > 1}
-            onClick={() => onTabClick(item.id)}
+            draggable={selectedItems.length > 1}
+            onClick={() => handleTabClick(item.id)}
             onDragStart={(event) => handleTabDragStart(event, index)}
             onDragOver={(event) => handleTabDragOver(event, index)}
             onDrop={(event) => handleTabDrop(event, index)}
