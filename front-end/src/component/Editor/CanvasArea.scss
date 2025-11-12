@@ -6,6 +6,7 @@
   background: radial-gradient(circle at 50% 50%, #2c2f36 0%, #1a1d24 65%);
   border-right: 1px solid var(--line);
   position: relative;
+  min-width: 0;
 }
 
 .canvas-header {
@@ -15,6 +16,24 @@
   padding: 0.4rem 1rem;
   background: var(--panel-2);
   border-bottom: 1px solid var(--line);
+  overflow-x: auto;
+  min-width: 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent-soft) rgba(255, 255, 255, 0.06);
+}
+
+.canvas-header::-webkit-scrollbar {
+  height: 10px;
+}
+
+.canvas-header::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 999px;
+}
+
+.canvas-header::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--accent), var(--accent-soft));
+  border-radius: 999px;
 }
 
 .document-tabs {
