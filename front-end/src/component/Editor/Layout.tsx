@@ -14,12 +14,14 @@ import { LoginModalState } from "@jsLib/class/Login";
 import type { UploadBatchDto, UploadListResponseDto } from "@shared/types/uploads";
 import axios from "axios";
 import { useNavigate } from "react-router";
+import { OcrClient } from "@jsLib/class/OcrClient";
 
 export class Editor extends Main {
   public iv_activeTool = "crop";
   private iv_zoom = 100;
-  private iv_upload: Upload;
-  private iv_loading: Loading;
+  private readonly iv_upload: Upload;
+  private readonly iv_loading: Loading;
+  private readonly iv_OcrClient:OcrClient;
   private iv_loginStore: LoginModalState;
   public iv_isFileModalOpen = false;
   public iv_isUploadHistoryOpen = false;
@@ -41,6 +43,9 @@ export class Editor extends Main {
     this.iv_loginStore = new LoginModalState(() => {
       this.im_forceRender();
     });
+    this.iv_OcrClient = new OcrClient(()=>{
+      this.im_forceRender();
+    })
   }
 
   public get pt_activeTool() {
@@ -75,6 +80,11 @@ export class Editor extends Main {
   public get pt_loading() {
     return this.iv_loading;
   }
+
+  public get pt_ocrClient(){
+    return this.iv_OcrClient;
+  }
+
   public get pt_loginStore() {
     return this.iv_loginStore;
   }

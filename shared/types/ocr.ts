@@ -1,6 +1,7 @@
 export interface OcrRequestBody {
   image: string;
   language: string;
+  batchId:number;
 }
 
 export interface OcrWordBoundingBox {

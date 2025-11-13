@@ -279,9 +279,7 @@ const MenuBar: React.FC<MenuBarProps> = ({ editor }) => {
     editor.iv_isUploading = false;
     editor.iv_isUploadHistoryOpen = true;
     editor.im_forceRender();
-  };
-
-  const selectedBatch = editor.pt_selectedUploadBatch;
+  };  
 
   return (
     <>
