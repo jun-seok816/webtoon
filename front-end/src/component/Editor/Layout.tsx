@@ -12,14 +12,15 @@ import { Upload } from "@jsLib/class/Upload";
 import { Loading } from "@jsLib/class/Loading";
 import { LoginModalState } from "@jsLib/class/Login";
 import type { UploadBatchDto, UploadListResponseDto } from "@shared/types/uploads";
+import type { AppLanguageCode } from "@shared/types/translate";
 import axios from "axios";
 import { useNavigate } from "react-router";
 import { OcrClient } from "@jsLib/class/OcrClient";
 
 export class Editor extends Main {
   public iv_activeTool = "crop";
-  public iv_originalLang = "kor";
-  public iv_translatedLang = "eng";
+  public iv_originalLang: AppLanguageCode = "kor";
+  public iv_translatedLang: AppLanguageCode = "eng";
   private iv_zoom = 100;
   private readonly iv_upload: Upload;
   private readonly iv_loading: Loading;
@@ -70,7 +71,7 @@ export class Editor extends Main {
     this.im_forceRender();
   }
 
-  public im_setOriginalLang(language: string) {
+  public im_setOriginalLang(language: AppLanguageCode) {
     if (this.iv_originalLang === language) {
       return;
     }
@@ -78,7 +79,7 @@ export class Editor extends Main {
     this.im_forceRender();
   }
 
-  public im_setTranslatedLang(language: string) {
+  public im_setTranslatedLang(language: AppLanguageCode) {
     if (this.iv_translatedLang === language) {
       return;
     }

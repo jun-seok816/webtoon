@@ -110,6 +110,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
     () => selectedBatch?.items ?? [],
     [selectedBatch]
   );
+  const selectedBatchId = selectedBatch?.id ?? null;
   const [crop, setCrop] = useState<Crop | undefined>(undefined);
 
   const handleCropComplete = useCallback(
@@ -125,7 +126,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
 
       const payload: OcrRequestBody = {
         language: editor.pt_originalLang,
-        batchId:selectedBatch?.id ?? -1,
+        batchId: selectedBatchId ?? -1,
         image: imageDataUrl,
       };
 
@@ -135,7 +136,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
         console.error("[CanvasArea] OCR 요청 실패", error);
       }
     },
-    [editor]
+    [editor, selectedBatchId]
   );
 
   return (

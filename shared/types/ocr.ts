@@ -1,7 +1,9 @@
+import type { AppLanguageCode } from "./translate";
+
 export interface OcrRequestBody {
   image: string;
-  language: string;
-  batchId:number;
+  language: AppLanguageCode;
+  batchId: number;
 }
 
 export interface OcrWordBoundingBox {

@@ -1,6 +1,7 @@
 import React from "react";
 import { Editor } from "./Layout";
 import "./OptionsBar.scss";
+import { AppLanguageCode } from "@shared/types/translate";
 
 interface OptionsBarProps {
   editor: Editor;
@@ -49,7 +50,7 @@ const OptionsBar: React.FC<OptionsBarProps> = ({ editor }) => {
                 id="original-lang"
                 value={originalLang}
                 onChange={(event) =>
-                  editor.im_setOriginalLang(event.target.value)
+                  editor.im_setOriginalLang(event.target.value as AppLanguageCode)
                 }
               >
                 <option value="kor">한국어</option>
@@ -64,7 +65,7 @@ const OptionsBar: React.FC<OptionsBarProps> = ({ editor }) => {
                 id="translated-lang"
                 value={translatedLang}
                 onChange={(event) =>
-                  editor.im_setTranslatedLang(event.target.value)
+                  editor.im_setTranslatedLang(event.target.value as AppLanguageCode)
                 }
               >
                 <option value="kor">한국어</option>
