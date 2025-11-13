@@ -1,10 +1,6 @@
 import { Router, Request, Response } from "express";
 import Tesseract from "tesseract.js";
-
-interface OcrRequestBody {
-  image?: string;
-  language?: string;
-}
+import type { OcrRequestBody } from "../../../shared/types/ocr";
 
 const DEFAULT_LANGUAGE = "eng";
 
