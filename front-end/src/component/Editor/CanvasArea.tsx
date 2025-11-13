@@ -11,11 +11,6 @@ import ReactCrop, { Crop, type PercentCrop } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
 import DocumentTabs from "./DocumentTabs";
 
-interface NavigatorViewportMetrics {
-  top: number;
-  height: number;
-}
-
 interface CanvasAreaProps {
   editor: Editor;
 }
