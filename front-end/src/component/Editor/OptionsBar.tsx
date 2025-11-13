@@ -8,6 +8,8 @@ interface OptionsBarProps {
 
 const OptionsBar: React.FC<OptionsBarProps> = ({ editor }) => {
   const activeTool = editor.pt_activeTool;
+  const originalLang = editor.pt_originalLang;
+  const translatedLang = editor.pt_translatedLang;
 
   const renderToolOptions = () => {
     switch (activeTool) {
@@ -42,18 +44,35 @@ const OptionsBar: React.FC<OptionsBarProps> = ({ editor }) => {
         return (
           <>
             <div className="options-group">
-              <label htmlFor="crop-ratio">Ratio</label>
-              <select id="crop-ratio" defaultValue="original">
-                <option value="original">Original Ratio</option>
-                <option value="square">1 : 1</option>
-                <option value="webtoon">720 x 1280</option>
+              <label htmlFor="original-lang">원문 언어</label>
+              <select
+                id="original-lang"
+                value={originalLang}
+                onChange={(event) =>
+                  editor.im_setOriginalLang(event.target.value)
+                }
+              >
+                <option value="kor">한국어</option>
+                <option value="eng">영어</option>
+                <option value="jpn">일본어</option>
+                <option value="chi_sim">중국어(간체)</option>
               </select>
             </div>
             <div className="options-group">
-              <label htmlFor="crop-straighten">Straighten</label>
-              <input id="crop-straighten" type="number" defaultValue={0} />
+              <label htmlFor="translated-lang">번역 언어</label>
+              <select
+                id="translated-lang"
+                value={translatedLang}
+                onChange={(event) =>
+                  editor.im_setTranslatedLang(event.target.value)
+                }
+              >
+                <option value="kor">한국어</option>
+                <option value="eng">영어</option>
+                <option value="jpn">일본어</option>
+                <option value="chi_sim">중국어(간체)</option>
+              </select>
             </div>
-            <button className="options-button">Reset</button>
             <button className="options-button options-button--primary">
               Apply
             </button>

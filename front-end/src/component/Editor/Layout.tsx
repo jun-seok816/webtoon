@@ -18,6 +18,8 @@ import { OcrClient } from "@jsLib/class/OcrClient";
 
 export class Editor extends Main {
   public iv_activeTool = "crop";
+  public iv_originalLang = "kor";
+  public iv_translatedLang = "eng";
   private iv_zoom = 100;
   private readonly iv_upload: Upload;
   private readonly iv_loading: Loading;
@@ -52,11 +54,35 @@ export class Editor extends Main {
     return this.iv_activeTool;
   }
 
+  public get pt_originalLang() {
+    return this.iv_originalLang;
+  }
+
+  public get pt_translatedLang() {
+    return this.iv_translatedLang;
+  }
+
   public im_setActiveTool(tool: string) {
     if (this.iv_activeTool === tool) {
       return;
     }
     this.iv_activeTool = tool;
+    this.im_forceRender();
+  }
+
+  public im_setOriginalLang(language: string) {
+    if (this.iv_originalLang === language) {
+      return;
+    }
+    this.iv_originalLang = language;
+    this.im_forceRender();
+  }
+
+  public im_setTranslatedLang(language: string) {
+    if (this.iv_translatedLang === language) {
+      return;
+    }
+    this.iv_translatedLang = language;
     this.im_forceRender();
   }
 

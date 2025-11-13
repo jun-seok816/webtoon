@@ -124,9 +124,9 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
       }
 
       const payload: OcrRequestBody = {
-        language: "eng",
+        language: editor.pt_originalLang,
+        batchId:selectedBatch?.id ?? -1,
         image: imageDataUrl,
-        batchId:selectedBatch?.id ?? -1
       };
 
       try {
@@ -191,28 +191,6 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
             </div>
           </div>
         </div>
-        {/* <aside className="canvas-navigator">
-          <div className="navigator-header">
-            <span>Navigator</span>
-            <button aria-label="Navigator options">
-              <i className="bi bi-three-dots" aria-hidden="true" />
-            </button>
-          </div>
-          <div className="navigator-thumbnail">
-            <div className="navigator-long-preview">
-              <div className="navigator-long-preview__track">
-                <div
-                  className="navigator-viewport"
-                  style={{
-                    transform: `scaleY(${navigatorViewportScale})`,
-                    top: `${navigatorViewportMetrics.top}%`,
-                    height: `${navigatorViewportMetrics.height}%`,
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-        </aside> */}
       </div>
     </section>
   );
