@@ -1,7 +1,10 @@
-import React from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { Editor } from "./Layout";
 import "./OptionsBar.scss";
 import { AppLanguageCode } from "@shared/types/translate";
+import { SketchPicker } from "react-color";
+import type { ColorResult } from "react-color";
+import type { EditorColorKey } from "@jsLib/class/ColorPalette";
 
 interface OptionsBarProps {
   editor: Editor;
@@ -11,6 +14,30 @@ const OptionsBar: React.FC<OptionsBarProps> = ({ editor }) => {
   const activeTool = editor.pt_activeTool;
   const originalLang = editor.pt_originalLang;
   const translatedLang = editor.pt_translatedLang;
+  const colorPalette = editor.pt_colorPalette;
+  const [openPicker, setOpenPicker] = useState<EditorColorKey | null>(null);
+
+  const colorControls = useMemo(
+    () => [
+      { key: "primary" as EditorColorKey, label: "배경 색상" },
+      { key: "secondary" as EditorColorKey, label: "텍스트 색상" },
+    ],
+    []
+  );
+
+  const togglePicker = useCallback((key: EditorColorKey) => {
+    setOpenPicker((previous) => (previous === key ? null : key));
+  }, []);
+
+  const applyColor = useCallback(
+    (key: EditorColorKey, color: ColorResult, closeAfter: boolean) => {
+      colorPalette.im_setColor(key, color.hex);
+      if (closeAfter) {
+        setOpenPicker(null);
+      }
+    },
+    [colorPalette]
+  );
 
   const renderToolOptions = () => {
     switch (activeTool) {
@@ -74,9 +101,50 @@ const OptionsBar: React.FC<OptionsBarProps> = ({ editor }) => {
                 <option value="chi_sim">중국어(간체)</option>
               </select>
             </div>
-            <button className="options-button options-button--primary">
-              Apply
-            </button>
+            <div className="options-color-controls">
+              {colorControls.map(({ key, label }) => {
+                const currentColor = colorPalette.pt_getColor(key);
+                const isPickerOpen = openPicker === key;
+                return (
+                  <div className="blend-control" key={key}>
+                    <button
+                      type="button"
+                      className="blend-control__swatch"
+                      style={{ backgroundColor: currentColor }}
+                      aria-label={`${label} 선택`}
+                      onClick={() => togglePicker(key)}
+                    />
+                    <div className="blend-control__info">
+                      <span className="blend-control__label">{label}</span>
+                      <span className="blend-control__value">{currentColor}</span>
+                    </div>                
+                    {isPickerOpen && (
+                      <div className="blend-control__popover">
+                        <SketchPicker
+                          color={currentColor}
+                          onChange={(color: ColorResult) => applyColor(key, color, false)}
+                          onChangeComplete={(color: ColorResult) =>
+                            applyColor(key, color, true)
+                          }
+                          disableAlpha
+                        />
+                        <button
+                          type="button"
+                          className="blend-control__close"
+                          onClick={() => setOpenPicker(null)}
+                        >
+                          Close
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            <div className="options-group options-group--small">
+              <label htmlFor="crop-opacity">Opacity</label>
+              <input id="crop-opacity" type="number" defaultValue={100} />
+            </div>
           </>
         );
       default:

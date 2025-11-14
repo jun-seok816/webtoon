@@ -18,6 +18,7 @@ import { useNavigate } from "react-router";
 import { OcrClient } from "@jsLib/class/OcrClient";
 import { TranslateClient } from "@jsLib/class/Translate";
 import { ColorPalette } from "@jsLib/class/ColorPalette";
+import type { CropOverlayBox } from "./CropOverlayTypes";
 
 export class Editor extends Main {
   public iv_activeTool = "crop";
@@ -29,6 +30,7 @@ export class Editor extends Main {
   private readonly iv_OcrClient:OcrClient;
   private readonly iv_Translate:TranslateClient;
   private readonly iv_colorPalette: ColorPalette;
+  private iv_cropBoxes: CropOverlayBox[] = [];
   private iv_loginStore: LoginModalState;
   public iv_isFileModalOpen = false;
   public iv_isUploadHistoryOpen = false;
@@ -156,6 +158,37 @@ export class Editor extends Main {
 
   public get pt_colorPalette() {
     return this.iv_colorPalette;
+  }
+
+  public get pt_cropBoxes() {
+    return this.iv_cropBoxes;
+  }
+
+  public im_addCropOverlay(box: CropOverlayBox) {
+    this.iv_cropBoxes = [...this.iv_cropBoxes, box];
+    this.im_forceRender();
+  }
+
+  public im_setCropOverlayText(id: string, text: string) {
+    let updated = false;
+    this.iv_cropBoxes = this.iv_cropBoxes.map((box) => {
+      if (box.id === id) {
+        updated = true;
+        return { ...box, text };
+      }
+      return box;
+    });
+    if (updated) {
+      this.im_forceRender();
+    }
+  }
+
+  public im_clearCropOverlays() {
+    if (this.iv_cropBoxes.length === 0) {
+      return;
+    }
+    this.iv_cropBoxes = [];
+    this.im_forceRender();
   }
 
   public im_setSelectedUploadBatch(batch: UploadBatchDto | null) {

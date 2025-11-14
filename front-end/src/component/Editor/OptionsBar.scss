@@ -38,6 +38,11 @@
   }
 }
 
+.options-group--small {
+  min-width: 80px;
+  max-width: 100px;
+}
+
 .options-separator {
   width: 1px;
   height: 24px;
@@ -66,4 +71,19 @@
   display: flex;
   align-items: center;
   gap: 0.4rem;
+}
+
+.options-color-controls {
+  display: flex;
+  gap: 0.8rem;
+  align-items: stretch;
+}
+
+.options-color-controls .blend-control {
+  padding: 0.1rem 0;
+  min-width: 200px;
+}
+
+.options-color-controls .blend-control__popover {
+  top: calc(100% + 0.5rem);
 }

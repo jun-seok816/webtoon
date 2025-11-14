@@ -15,20 +15,11 @@ import {
   TranslateRequestBody,
   TranslateResponseBody,
 } from "@shared/types/translate";
-import Moveable from "react-moveable";
+import { CropOverlayLayer } from "./CropOverlayLayer";
+import type { CropOverlayBox } from "./CropOverlayTypes";
 
 interface CanvasAreaProps {
   editor: Editor;
-}
-
-interface CropOverlayBox {
-  id: string;
-  itemId: string | number;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  text: string;
 }
 
 const clamp = (value: number, min: number, max: number) =>
@@ -167,11 +158,11 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
   );
   const selectedBatchId = selectedBatch?.id ?? null;
   const [crop, setCrop] = useState<Crop | undefined>(undefined);
-  const [cropBoxes, setCropBoxes] = useState<CropOverlayBox[]>([]);
+  const cropBoxes = editor.pt_cropBoxes;
 
   useEffect(() => {
-    setCropBoxes([]);
-  }, [selectedBatchId]);
+    editor.im_clearCropOverlays();
+  }, [editor, selectedBatchId]);
 
   const lftranslate = useCallback(
     async (ocr: OcrResponseBody): Promise<TranslateResponseBody | null> => {
@@ -226,7 +217,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
             text: "",
           };
 
-          setCropBoxes((prev) => [...prev, newOverlay]);
+          editor.im_addCropOverlay(newOverlay);
 
           translationPromise
             .then((translationRes) => {
@@ -234,16 +225,10 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
                 return;
               }
 
-              setCropBoxes((prev) => {
-                if (!prev.some((box) => box.id === newOverlay.id)) {
-                  return prev;
-                }
-                return prev.map((box) =>
-                  box.id === newOverlay.id
-                    ? { ...box, text: translationRes.translatedText }
-                    : box
-                );
-              });
+              editor.im_setCropOverlayText(
+                newOverlay.id,
+                translationRes.translatedText
+              );
             })
             .catch((error) => {
               console.error("[CanvasArea] 번역 결과 업데이트 실패", error);
@@ -303,13 +288,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
                           />
                         </ReactCrop>
                         {cropBoxes.length > 0 && (
-                          <div className="scroll-viewer__overlay-layer">
-                            {cropBoxes
-                              .filter((box) => box.itemId === item.id)
-                              .map((box) => (
-                                <CropOverlay key={box.id} box={box} />
-                              ))}
-                          </div>
+                          <CropOverlayLayer editor={editor} itemId={item.id} />
                         )}
                       </div>
                     ))}
@@ -321,49 +300,6 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
         </div>
       </div>
     </section>
-  );
-};
-
-interface CropOverlayProps {
-  box: CropOverlayBox;
-}
-
-const CropOverlay: React.FC<CropOverlayProps> = ({ box }) => {
-  const [target, setTarget] = useState<HTMLDivElement | null>(null);
-  const handleRef = useCallback((node: HTMLDivElement | null) => {
-    setTarget(node);
-  }, []);
-
-  return (
-    <>
-      <div
-        ref={handleRef}
-        className="crop-overlay"
-        style={{
-          top: `${box.y}px`,
-          left: `${box.x}px`,
-          width: `${box.width}px`,
-          height: `${box.height}px`,
-        }}
-      >
-        {box.text && (
-          <div className="crop-overlay__text">{box.text}</div>
-        )}
-      </div>
-      {target && (
-        <Moveable
-          target={target}
-          draggable={false}
-          resizable={false}
-          scalable={false}
-          rotatable={false}
-          pinchable={false}
-          edgeDraggable={false}
-          origin={false}
-          hideDefaultLines={false}
-        />
-      )}
-    </>
   );
 };
 
