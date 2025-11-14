@@ -3,6 +3,22 @@ import Moveable from "react-moveable";
 import type { Editor } from "./Layout";
 import type { CropOverlayBox } from "./CropOverlayTypes";
 
+const hexToRgba = (hex: string, alpha: number) => {
+  const normalized = hex.replace("#", "");
+  const expanded =
+    normalized.length === 3
+      ? normalized
+          .split("")
+          .map((char) => char + char)
+          .join("")
+      : normalized.padEnd(6, "F");
+  const bigint = parseInt(expanded, 16);
+  const r = (bigint >> 16) & 255;
+  const g = (bigint >> 8) & 255;
+  const b = bigint & 255;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
+
 interface CropOverlayLayerProps {
   editor: Editor;
   itemId: string | number;
@@ -51,9 +67,18 @@ const CropOverlay: React.FC<CropOverlayProps> = ({ box }) => {
           left: `${box.x}px`,
           width: `${box.width}px`,
           height: `${box.height}px`,
+          backgroundColor: hexToRgba(box.backgroundColor ?? "#ffffff", 0.22),
+          borderColor: box.backgroundColor,
         }}
       >
-        {box.text && <div className="crop-overlay__text">{box.text}</div>}
+        {box.text && (
+          <div
+            className="crop-overlay__text"
+            style={{ color: box.textColor }}
+          >
+            {box.text}
+          </div>
+        )}
       </div>
       {target && (
         <Moveable

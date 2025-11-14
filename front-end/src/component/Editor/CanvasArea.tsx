@@ -117,7 +117,7 @@ const cropImageToBase64 = (
 const getDisplayedCropBox = (
   image: HTMLImageElement,
   crop: Crop | undefined
-): Omit<CropOverlayBox, "id" | "itemId"> | null => {
+): Pick<CropOverlayBox, "x" | "y" | "width" | "height"> | null => {
   if (!crop || !crop.width || !crop.height) {
     return null;
   }
@@ -143,8 +143,7 @@ const getDisplayedCropBox = (
     x: valueToPixels(crop.x ?? 0, displayedWidth),
     y: valueToPixels(crop.y ?? 0, displayedHeight),
     width: valueToPixels(crop.width, displayedWidth),
-    height: valueToPixels(crop.height, displayedHeight),
-    text:""
+    height: valueToPixels(crop.height, displayedHeight),    
   };
 };
 
@@ -210,11 +209,15 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
         const translationPromise = lftranslate(res);
 
         if (res.success && overlayBox) {
+          const backgroundColor = editor.pt_colorPalette.pt_primaryColor;
+          const textColor = editor.pt_colorPalette.pt_secondaryColor;
           const newOverlay: CropOverlayBox = {
             id: `${itemId}-${Date.now()}-${Math.round(Math.random() * 1000)}`,
             itemId,
             ...overlayBox,
             text: "",
+            backgroundColor,
+            textColor,
           };
 
           editor.im_addCropOverlay(newOverlay);

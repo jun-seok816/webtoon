@@ -6,4 +6,6 @@ export interface CropOverlayBox {
   width: number;
   height: number;
   text: string;
+  backgroundColor: string;
+  textColor: string;
 }
