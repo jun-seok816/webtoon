@@ -17,6 +17,7 @@ import axios from "axios";
 import { useNavigate } from "react-router";
 import { OcrClient } from "@jsLib/class/OcrClient";
 import { TranslateClient } from "@jsLib/class/Translate";
+import { ColorPalette } from "@jsLib/class/ColorPalette";
 
 export class Editor extends Main {
   public iv_activeTool = "crop";
@@ -27,6 +28,7 @@ export class Editor extends Main {
   private readonly iv_loading: Loading;
   private readonly iv_OcrClient:OcrClient;
   private readonly iv_Translate:TranslateClient;
+  private readonly iv_colorPalette: ColorPalette;
   private iv_loginStore: LoginModalState;
   public iv_isFileModalOpen = false;
   public iv_isUploadHistoryOpen = false;
@@ -54,6 +56,9 @@ export class Editor extends Main {
     this.iv_Translate = new TranslateClient(()=>{
       this.im_forceRender();
     })
+    this.iv_colorPalette = new ColorPalette(() => {
+      this.im_forceRender();
+    });
   }
 
   public get pt_activeTool() {
@@ -147,6 +152,10 @@ export class Editor extends Main {
 
   public get pt_translateClient(){
     return this.iv_Translate;
+  }
+
+  public get pt_colorPalette() {
+    return this.iv_colorPalette;
   }
 
   public im_setSelectedUploadBatch(batch: UploadBatchDto | null) {

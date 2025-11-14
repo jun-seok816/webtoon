@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import PanelTab from "./PanelTab";
 import { Editor } from "./Layout";
 import "./RightPanels.scss";
 import { SketchPicker } from "react-color";
 import type { ColorResult } from "react-color";
+import type { EditorColorKey } from "@jsLib/class/ColorPalette";
 
 const layerItems = [
   { id: "layer-3", name: "Speech Bubble", info: "Blend: Screen • 80%", isLocked: false },
@@ -25,10 +26,34 @@ interface RightPanelsProps {
 }
 
 const RightPanels: React.FC<RightPanelsProps> = ({ editor }) => {
-  void editor;
   const [activeTab, setActiveTab] = useState<"layers" | "properties" | "history">("layers");
-  const [blendColor, setBlendColor] = useState("#ffffff");
-  const [isBlendPickerOpen, setBlendPickerOpen] = useState(false);
+  const [openPicker, setOpenPicker] = useState<EditorColorKey | null>(null);
+  const colorPalette = editor.pt_colorPalette;
+
+  const colorControls = useMemo(
+    () => [
+      { key: "primary" as EditorColorKey, label: "기본 색상" },
+      { key: "secondary" as EditorColorKey, label: "보조 색상" },
+    ],
+    []
+  );
+
+  const togglePicker = useCallback(
+    (key: EditorColorKey) => {
+      setOpenPicker((previous) => (previous === key ? null : key));
+    },
+    []
+  );
+
+  const applyColor = useCallback(
+    (key: EditorColorKey, color: ColorResult, closeAfter: boolean) => {
+      colorPalette.im_setColor(key, color.hex);
+      if (closeAfter) {
+        setOpenPicker(null);
+      }
+    },
+    [colorPalette]
+  );
 
   return (
     <aside className="right-panels">
@@ -57,45 +82,53 @@ const RightPanels: React.FC<RightPanelsProps> = ({ editor }) => {
           <div className="panel-stack">
             <div className="panel-section panel-section--compact">
               <div className="panel-section__header">
-                <span>Blend</span>
+                <span>색상</span>
               </div>
-              <div className="blend-control">
-                <button
-                  type="button"
-                  className="blend-control__swatch"
-                  style={{ backgroundColor: blendColor }}
-                  aria-label="현재 블렌드 색상 선택"
-                  onClick={() => setBlendPickerOpen((previous) => !previous)}
-                />
-                <span className="blend-control__value">{blendColor.toUpperCase()}</span>
-                <button
-                  type="button"
-                  className="blend-control__toggle"
-                  onClick={() => setBlendPickerOpen((previous) => !previous)}
-                >
-                  Pick
-                </button>
-                {isBlendPickerOpen && (
-                  <div className="blend-control__popover">
-                    <SketchPicker
-                      color={blendColor}
-                      onChange={(color: ColorResult) => setBlendColor(color.hex)}
-                      onChangeComplete={(color: ColorResult) => {
-                        setBlendColor(color.hex);
-                        setBlendPickerOpen(false);
-                      }}
-                      disableAlpha
-                    />
+              {colorControls.map(({ key, label }) => {
+                const currentColor = colorPalette.pt_getColor(key);
+                const isPickerOpen = openPicker === key;
+                return (
+                  <div className="blend-control" key={key}>
                     <button
                       type="button"
-                      className="blend-control__close"
-                      onClick={() => setBlendPickerOpen(false)}
+                      className="blend-control__swatch"
+                      style={{ backgroundColor: currentColor }}
+                      aria-label={`${label} 선택`}
+                      onClick={() => togglePicker(key)}
+                    />
+                    <div className="blend-control__info">
+                      <span className="blend-control__label">{label}</span>
+                      <span className="blend-control__value">{currentColor}</span>
+                    </div>
+                    <button
+                      type="button"
+                      className="blend-control__toggle"
+                      onClick={() => togglePicker(key)}
                     >
-                      Close
+                      Pick
                     </button>
+                    {isPickerOpen && (
+                      <div className="blend-control__popover">
+                        <SketchPicker
+                          color={currentColor}
+                          onChange={(color: ColorResult) => applyColor(key, color, false)}
+                          onChangeComplete={(color: ColorResult) =>
+                            applyColor(key, color, true)
+                          }
+                          disableAlpha
+                        />
+                        <button
+                          type="button"
+                          className="blend-control__close"
+                          onClick={() => setOpenPicker(null)}
+                        >
+                          Close
+                        </button>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+                );
+              })}
               <div className="panel-row">
                 <label htmlFor="layer-opacity">Opacity</label>
                 <input id="layer-opacity" type="number" defaultValue={100} />

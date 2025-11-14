@@ -211,11 +211,26 @@
     border: 1px solid var(--line);
   }
 
-  &__value {
+  &__info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
     flex: 1;
+    min-width: 0;
+  }
+
+  &__label {
+    font-size: 0.68rem;
+    color: rgba(255, 255, 255, 0.55);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  &__value {
     font-size: 0.75rem;
-    color: var(--muted);
+    color: var(--text);
     letter-spacing: 0.05em;
+    word-break: break-all;
   }
 
   &__toggle,

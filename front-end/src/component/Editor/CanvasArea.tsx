@@ -1,14 +1,34 @@
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Editor } from "./Layout";
 import "./CanvasArea.scss";
 import ReactCrop, { Crop } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
 import DocumentTabs from "./DocumentTabs";
 import { OcrRequestBody, OcrResponseBody } from "@shared/types/ocr";
-import { TranslateRequestBody } from "@shared/types/translate";
+import {
+  TranslateRequestBody,
+  TranslateResponseBody,
+} from "@shared/types/translate";
+import Moveable from "react-moveable";
 
 interface CanvasAreaProps {
   editor: Editor;
+}
+
+interface CropOverlayBox {
+  id: string;
+  itemId: string | number;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  text: string;
 }
 
 const clamp = (value: number, min: number, max: number) =>
@@ -103,6 +123,40 @@ const cropImageToBase64 = (
   return canvas.toDataURL(mimeType);
 };
 
+const getDisplayedCropBox = (
+  image: HTMLImageElement,
+  crop: Crop | undefined
+): Omit<CropOverlayBox, "id" | "itemId"> | null => {
+  if (!crop || !crop.width || !crop.height) {
+    return null;
+  }
+
+  const displayedWidth = image.width;
+  const displayedHeight = image.height;
+  if (!displayedWidth || !displayedHeight) {
+    return null;
+  }
+
+  const unit = crop.unit ?? "px";
+  const valueToPixels = (
+    value: number | undefined,
+    dimension: number
+  ): number => {
+    if (typeof value !== "number") {
+      return 0;
+    }
+    return unit === "%" ? (value / 100) * dimension : value;
+  };
+
+  return {
+    x: valueToPixels(crop.x ?? 0, displayedWidth),
+    y: valueToPixels(crop.y ?? 0, displayedHeight),
+    width: valueToPixels(crop.width, displayedWidth),
+    height: valueToPixels(crop.height, displayedHeight),
+    text:""
+  };
+};
+
 const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
   const scrollViewportRef = useRef<HTMLDivElement | null>(null);
   const imageRefs = useRef<Map<string | number, HTMLImageElement>>(new Map());
@@ -113,6 +167,34 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
   );
   const selectedBatchId = selectedBatch?.id ?? null;
   const [crop, setCrop] = useState<Crop | undefined>(undefined);
+  const [cropBoxes, setCropBoxes] = useState<CropOverlayBox[]>([]);
+
+  useEffect(() => {
+    setCropBoxes([]);
+  }, [selectedBatchId]);
+
+  const lftranslate = useCallback(
+    async (ocr: OcrResponseBody): Promise<TranslateResponseBody | null> => {
+      if (!ocr.success) {
+        return null;
+      }
+
+      const payload: TranslateRequestBody = {
+        text: ocr.text,
+        sourceLang: editor.pt_originalLang,
+        targetLang: editor.pt_translatedLang,
+      };
+
+      try {
+        editor.pt_translateClient.im_ClearResponse();
+        return await editor.pt_translateClient.im_Translate(payload);
+      } catch (error) {
+        console.error("[CanvasArea] 번역 요청 실패", error);
+        return null;
+      }
+    },
+    [editor.pt_originalLang, editor.pt_translateClient, editor.pt_translatedLang]
+  );
 
   const handleCropComplete = useCallback(
     async (itemId: string | number, completedCrop: Crop | undefined) => {
@@ -125,6 +207,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
         return;
       }
 
+      const overlayBox = getDisplayedCropBox(imageElement, completedCrop);
       const payload: OcrRequestBody = {
         language: editor.pt_originalLang,
         batchId: selectedBatchId ?? -1,
@@ -133,34 +216,44 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
 
       try {
         const res = await editor.pt_ocrClient.im_RequestOcr(payload);
-        lftranslate(res);
+        const translationPromise = lftranslate(res);
+
+        if (res.success && overlayBox) {
+          const newOverlay: CropOverlayBox = {
+            id: `${itemId}-${Date.now()}-${Math.round(Math.random() * 1000)}`,
+            itemId,
+            ...overlayBox,
+            text: "",
+          };
+
+          setCropBoxes((prev) => [...prev, newOverlay]);
+
+          translationPromise
+            .then((translationRes) => {
+              if (!translationRes?.success) {
+                return;
+              }
+
+              setCropBoxes((prev) => {
+                if (!prev.some((box) => box.id === newOverlay.id)) {
+                  return prev;
+                }
+                return prev.map((box) =>
+                  box.id === newOverlay.id
+                    ? { ...box, text: translationRes.translatedText }
+                    : box
+                );
+              });
+            })
+            .catch((error) => {
+              console.error("[CanvasArea] 번역 결과 업데이트 실패", error);
+            });
+        }
       } catch (error) {
         console.error("[CanvasArea] OCR 요청 실패", error);
       }
     },
-    [editor, selectedBatchId]
-  );
-
-  const lftranslate = useCallback(
-    async (ocr: OcrResponseBody) => {
-      if (!ocr.success) {
-        return;
-      }
-
-      const payload: TranslateRequestBody = {
-        text: ocr.text,
-        sourceLang: editor.pt_originalLang,
-        targetLang: editor.pt_translatedLang,
-      };
-
-      try {
-        editor.pt_translateClient.im_ClearResponse();
-        await editor.pt_translateClient.im_Translate(payload);
-      } catch (error) {
-        console.error("[CanvasArea] 번역 요청 실패", error);
-      }
-    },
-    [editor.pt_translateClient, editor.pt_translatedLang]
+    [editor, lftranslate, selectedBatchId]
   );
 
   return (
@@ -185,30 +278,40 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
                 ) : (
                   <div className="scroll-viewer__image-stack">
                     {selectedItems.map((item) => (
-                      <ReactCrop
-                        crop={crop}
-                        key={item.id}
-                        className="scroll-viewer__crop"
-                        onDragEnd={() => setCrop(undefined)}
-                        onChange={(nextCrop) => setCrop(nextCrop)}
-                        onComplete={(nextCrop) =>
-                          handleCropComplete(item.id, nextCrop)
-                        }
-                      >
-                        <img
-                          className="scroll-viewer__image"
-                          src={item.url}
-                          alt={item.originalName}
-                          crossOrigin="anonymous"
-                          ref={(node) => {
-                            if (node) {
-                              imageRefs.current.set(item.id, node);
-                            } else {
-                              imageRefs.current.delete(item.id);
-                            }
-                          }}
-                        />
-                      </ReactCrop>
+                      <div className="scroll-viewer__image-wrapper" key={item.id}>
+                        <ReactCrop
+                          crop={crop}
+                          className="scroll-viewer__crop"
+                          onDragEnd={() => setCrop(undefined)}
+                          onChange={(nextCrop) => setCrop(nextCrop)}
+                          onComplete={(nextCrop) =>
+                            handleCropComplete(item.id, nextCrop)
+                          }
+                        >
+                          <img
+                            className="scroll-viewer__image"
+                            src={item.url}
+                            alt={item.originalName}
+                            crossOrigin="anonymous"
+                            ref={(node) => {
+                              if (node) {
+                                imageRefs.current.set(item.id, node);
+                              } else {
+                                imageRefs.current.delete(item.id);
+                              }
+                            }}
+                          />
+                        </ReactCrop>
+                        {cropBoxes.length > 0 && (
+                          <div className="scroll-viewer__overlay-layer">
+                            {cropBoxes
+                              .filter((box) => box.itemId === item.id)
+                              .map((box) => (
+                                <CropOverlay key={box.id} box={box} />
+                              ))}
+                          </div>
+                        )}
+                      </div>
                     ))}
                   </div>
                 )}
@@ -218,6 +321,49 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
         </div>
       </div>
     </section>
+  );
+};
+
+interface CropOverlayProps {
+  box: CropOverlayBox;
+}
+
+const CropOverlay: React.FC<CropOverlayProps> = ({ box }) => {
+  const [target, setTarget] = useState<HTMLDivElement | null>(null);
+  const handleRef = useCallback((node: HTMLDivElement | null) => {
+    setTarget(node);
+  }, []);
+
+  return (
+    <>
+      <div
+        ref={handleRef}
+        className="crop-overlay"
+        style={{
+          top: `${box.y}px`,
+          left: `${box.x}px`,
+          width: `${box.width}px`,
+          height: `${box.height}px`,
+        }}
+      >
+        {box.text && (
+          <div className="crop-overlay__text">{box.text}</div>
+        )}
+      </div>
+      {target && (
+        <Moveable
+          target={target}
+          draggable={false}
+          resizable={false}
+          scalable={false}
+          rotatable={false}
+          pinchable={false}
+          edgeDraggable={false}
+          origin={false}
+          hideDefaultLines={false}
+        />
+      )}
+    </>
   );
 };
 
