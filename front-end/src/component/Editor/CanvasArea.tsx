@@ -4,7 +4,8 @@ import "./CanvasArea.scss";
 import ReactCrop, { Crop } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
 import DocumentTabs from "./DocumentTabs";
-import { OcrRequestBody } from "@shared/types/ocr";
+import { OcrRequestBody, OcrResponseBody } from "@shared/types/ocr";
+import { TranslateRequestBody } from "@shared/types/translate";
 
 interface CanvasAreaProps {
   editor: Editor;
@@ -131,12 +132,35 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
       };
 
       try {
-        await editor.pt_ocrClient.im_RequestOcr(payload);
+        const res = await editor.pt_ocrClient.im_RequestOcr(payload);
+        lftranslate(res);
       } catch (error) {
         console.error("[CanvasArea] OCR 요청 실패", error);
       }
     },
     [editor, selectedBatchId]
+  );
+
+  const lftranslate = useCallback(
+    async (ocr: OcrResponseBody) => {
+      if (!ocr.success) {
+        return;
+      }
+
+      const payload: TranslateRequestBody = {
+        text: ocr.text,
+        sourceLang: editor.pt_originalLang,
+        targetLang: editor.pt_translatedLang,
+      };
+
+      try {
+        editor.pt_translateClient.im_ClearResponse();
+        await editor.pt_translateClient.im_Translate(payload);
+      } catch (error) {
+        console.error("[CanvasArea] 번역 요청 실패", error);
+      }
+    },
+    [editor.pt_translateClient, editor.pt_translatedLang]
   );
 
   return (

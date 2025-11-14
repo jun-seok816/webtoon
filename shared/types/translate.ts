@@ -3,7 +3,7 @@ export type TranslateLanguageCode = AppLanguageCode | string;
 
 export interface TranslateRequestBody {
   text: string;
-  sourceLang?: AppLanguageCode | "auto";
+  sourceLang: AppLanguageCode;
   targetLang: AppLanguageCode;
 }
 
@@ -13,9 +13,6 @@ export interface TranslateSuccessResponse {
   originalText: string;
   sourceLang: TranslateLanguageCode;
   targetLang: TranslateLanguageCode;
-  autoCorrected: boolean;
-  didYouMean: boolean;
-  pronunciation?: string;
 }
 
 export interface TranslateErrorResponse {

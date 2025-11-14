@@ -16,15 +16,17 @@ import type { AppLanguageCode } from "@shared/types/translate";
 import axios from "axios";
 import { useNavigate } from "react-router";
 import { OcrClient } from "@jsLib/class/OcrClient";
+import { TranslateClient } from "@jsLib/class/Translate";
 
 export class Editor extends Main {
   public iv_activeTool = "crop";
-  public iv_originalLang: AppLanguageCode = "kor";
-  public iv_translatedLang: AppLanguageCode = "eng";
+  private iv_originalLang: AppLanguageCode = "kor";
+  private iv_translatedLang: AppLanguageCode = "eng";
   private iv_zoom = 100;
   private readonly iv_upload: Upload;
   private readonly iv_loading: Loading;
   private readonly iv_OcrClient:OcrClient;
+  private readonly iv_Translate:TranslateClient;
   private iv_loginStore: LoginModalState;
   public iv_isFileModalOpen = false;
   public iv_isUploadHistoryOpen = false;
@@ -49,6 +51,9 @@ export class Editor extends Main {
     this.iv_OcrClient = new OcrClient(()=>{
       this.im_forceRender();
     })
+    this.iv_Translate = new TranslateClient(()=>{
+      this.im_forceRender();
+    })
   }
 
   public get pt_activeTool() {
@@ -61,7 +66,7 @@ export class Editor extends Main {
 
   public get pt_translatedLang() {
     return this.iv_translatedLang;
-  }
+  }  
 
   public im_setActiveTool(tool: string) {
     if (this.iv_activeTool === tool) {
@@ -138,6 +143,10 @@ export class Editor extends Main {
 
   public get pt_selectedUploadBatch() {
     return this.iv_selectedUploadBatch;
+  }
+
+  public get pt_translateClient(){
+    return this.iv_Translate;
   }
 
   public im_setSelectedUploadBatch(batch: UploadBatchDto | null) {

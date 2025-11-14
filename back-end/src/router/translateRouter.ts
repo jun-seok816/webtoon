@@ -1,5 +1,5 @@
 import { Router, Request, Response } from "express";
-import translate from "google-translate-api";
+import {translate} from '@vitalets/google-translate-api';
 import type {
   TranslateRequestBody,
   TranslateResponseBody,
@@ -80,15 +80,8 @@ translateRouter.post(
         success: true,
         translatedText: translation.text,
         originalText: text,
-        sourceLang:
-          normalizedSource ??
-          mapToAppCode(translation.from.language.iso) ??
-          translation.from.language.iso ??
-          "auto",
+        sourceLang:normalizedSource??"kor",          
         targetLang: normalizedTarget,
-        autoCorrected: translation.from.text.autoCorrected ?? false,
-        didYouMean: translation.from.text.didYouMean ?? false,
-        pronunciation: translation.from.text.value || undefined,
       };
 
       res.json(responsePayload);

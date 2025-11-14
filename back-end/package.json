@@ -7,6 +7,7 @@
   "author": "hdr",
   "license": "ISC",
   "dependencies": {
+    "@vitalets/google-translate-api": "^9.2.1",
     "ag-psd": "^28.4.1",
     "axios": "^1.13.1",
     "bcryptjs": "^2.4.3",
@@ -32,6 +33,7 @@
     "@types/express-session": "^1.18.2",
     "@types/multer": "^1.4.12",
     "@types/node": "^24.0.3",
+    "@types/node-fetch": "^2.6.13",
     "@types/sharp": "^0.31.1",
     "nodemon": "^2.0.15",
     "ts-loader": "^9.2.6",
