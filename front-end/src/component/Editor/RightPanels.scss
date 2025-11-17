@@ -137,6 +137,17 @@
   color: var(--text);
 }
 
+.layer-name-input {
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  font: inherit;
+  color: inherit;
+  outline: none;
+}
+
 .layer-info {
   font-size: 0.65rem;
   color: var(--muted);

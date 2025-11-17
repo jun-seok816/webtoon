@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useState, ChangeEvent } from "react";
 import PanelTab from "./PanelTab";
 import { Editor } from "./Layout";
 import "./RightPanels.scss";
@@ -17,8 +17,14 @@ interface RightPanelsProps {
 }
 
 const RightPanels: React.FC<RightPanelsProps> = ({ editor }) => {
-  const [activeTab, setActiveTab] = useState<"layers" | "properties" | "history">("layers");
+  const [activeTab, setActiveTab] = useState<
+    "layers" | "properties" | "history"
+  >("layers");
   const cropLayerItems = editor.pt_cropBoxes ?? [];
+  const handleLayerNameChange =
+    (layerId: string) => (event: ChangeEvent<HTMLInputElement>) => {
+      editor.im_setCropOverlayText(layerId, event.target.value);
+    };
 
   return (
     <aside className="right-panels">
@@ -41,35 +47,38 @@ const RightPanels: React.FC<RightPanelsProps> = ({ editor }) => {
           onClick={() => setActiveTab("history")}
           icon="bi-clock-history"
         />
-      </div>      
+      </div>
       <div className="panel-content">
         {activeTab === "layers" && (
           <div className="panel-stack">
             <div className="panel-section panel-section--list">
               <div className="panel-section__header panel-section--compact">
                 <span>Layers</span>
-                <div className="panel-icons">                  
-                  <button title="Delete layer">
-                    <i className="bi bi-trash" aria-hidden="true" />
-                  </button>
-                </div>
               </div>
               <ul className="layer-list">
                 {cropLayerItems.length === 0 ? (
                   <li className="layer-item layer-item--empty">
                     <div className="layer-meta">
-                      <span className="layer-name">등록된 Crop Overlay가 없습니다.</span>
+                      <span className="layer-name">
+                        등록된 Crop Overlay가 없습니다.
+                      </span>
                     </div>
                   </li>
                 ) : (
                   cropLayerItems.map((layer) => (
                     <li key={layer.id} className="layer-item">
-                      <div
-                        className="layer-thumb"                      
-                      />
                       <div className="layer-meta">
-                        <span className="layer-name">{layer.text}</span>                        
+                        <span className="layer-label">{layer.originText}</span>
+                        <input
+                          type="text"
+                          className="layer-name layer-name-input"
+                          value={layer.text ?? ""}
+                          onChange={handleLayerNameChange(layer.id)}
+                        />
                       </div>
+                      <button title="Delete layer">
+                        <i className="bi bi-trash" aria-hidden="true" />
+                      </button>
                     </li>
                   ))
                 )}
@@ -125,11 +134,18 @@ const RightPanels: React.FC<RightPanelsProps> = ({ editor }) => {
             <div className="panel-section panel-section--compact">
               <div className="panel-section__header">
                 <span>History States</span>
-                <span className="panel-subtitle">{historyItems.length} steps</span>
+                <span className="panel-subtitle">
+                  {historyItems.length} steps
+                </span>
               </div>
               <ol className="history-list">
                 {historyItems.map((item, index) => (
-                  <li key={item} className={index === historyItems.length - 2 ? "is-current" : ""}>
+                  <li
+                    key={item}
+                    className={
+                      index === historyItems.length - 2 ? "is-current" : ""
+                    }
+                  >
                     <span className="history-index">{index + 1}</span>
                     <span className="history-label">{item}</span>
                   </li>

@@ -216,6 +216,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
             id: `${itemId}-${Date.now()}-${Math.round(Math.random() * 1000)}`,
             itemId,
             ...overlayBox,
+            originText:res.text,
             text: "",
             backgroundColor,
             textColor,
