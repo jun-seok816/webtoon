@@ -115,11 +115,6 @@
     color: var(--text);
   }
 
-  &.is-locked {
-    .layer-name {
-      color: rgba(255, 255, 255, 0.65);
-    }
-  }
 }
 
 .layer-thumb {

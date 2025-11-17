@@ -1,13 +1,7 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import PanelTab from "./PanelTab";
 import { Editor } from "./Layout";
 import "./RightPanels.scss";
-
-const layerItems = [
-  { id: "layer-3", name: "Speech Bubble", info: "Blend: Screen • 80%", isLocked: false },
-  { id: "layer-2", name: "Character Inks", info: "Lock: Transparent", isLocked: true },
-  { id: "layer-1", name: "Background Color", info: "Fill 100%", isLocked: true },
-];
 
 const historyItems = [
   "Open Document",
@@ -23,8 +17,8 @@ interface RightPanelsProps {
 }
 
 const RightPanels: React.FC<RightPanelsProps> = ({ editor }) => {
-  void editor;
   const [activeTab, setActiveTab] = useState<"layers" | "properties" | "history">("layers");
+  const cropLayerItems = editor.pt_cropBoxes ?? [];
 
   return (
     <aside className="right-panels">
@@ -54,31 +48,31 @@ const RightPanels: React.FC<RightPanelsProps> = ({ editor }) => {
             <div className="panel-section panel-section--list">
               <div className="panel-section__header panel-section--compact">
                 <span>Layers</span>
-                <div className="panel-icons">
-                  <button title="Create new layer">
-                    <i className="bi bi-plus-square" aria-hidden="true" />
-                  </button>
-                  <button title="Create group">
-                    <i className="bi bi-folder-plus" aria-hidden="true" />
-                  </button>
+                <div className="panel-icons">                  
                   <button title="Delete layer">
                     <i className="bi bi-trash" aria-hidden="true" />
                   </button>
                 </div>
               </div>
               <ul className="layer-list">
-                {layerItems.map((layer) => (
-                  <li key={layer.id} className={`layer-item ${layer.isLocked ? "is-locked" : ""}`}>
-                    <div className="layer-thumb" />
+                {cropLayerItems.length === 0 ? (
+                  <li className="layer-item layer-item--empty">
                     <div className="layer-meta">
-                      <span className="layer-name">{layer.name}</span>
-                      <span className="layer-info">{layer.info}</span>
+                      <span className="layer-name">등록된 Crop Overlay가 없습니다.</span>
                     </div>
-                    {layer.isLocked && (
-                      <i className="bi bi-lock-fill layer-lock" aria-hidden="true" />
-                    )}
                   </li>
-                ))}
+                ) : (
+                  cropLayerItems.map((layer) => (
+                    <li key={layer.id} className="layer-item">
+                      <div
+                        className="layer-thumb"                      
+                      />
+                      <div className="layer-meta">
+                        <span className="layer-name">{layer.text}</span>                        
+                      </div>
+                    </li>
+                  ))
+                )}
               </ul>
             </div>
           </div>
