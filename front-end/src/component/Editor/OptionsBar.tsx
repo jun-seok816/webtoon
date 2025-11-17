@@ -1,4 +1,5 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import debounce from "lodash/debounce";
 import { Editor } from "./Layout";
 import "./OptionsBar.scss";
 import { AppLanguageCode } from "@shared/types/translate";
@@ -16,6 +17,9 @@ const OptionsBar: React.FC<OptionsBarProps> = ({ editor }) => {
   const translatedLang = editor.pt_translatedLang;
   const colorPalette = editor.pt_colorPalette;
   const [openPicker, setOpenPicker] = useState<EditorColorKey | null>(null);
+  const [cropOpacityInput, setCropOpacityInput] = useState(() =>
+    editor.pt_cropOpacity.toString()
+  );
 
   const colorControls = useMemo(
     () => [
@@ -25,9 +29,43 @@ const OptionsBar: React.FC<OptionsBarProps> = ({ editor }) => {
     []
   );
 
+  useEffect(() => {
+    setCropOpacityInput(editor.pt_cropOpacity.toString());
+  }, [editor.pt_cropOpacity]);
+
   const togglePicker = useCallback((key: EditorColorKey) => {
     setOpenPicker((previous) => (previous === key ? null : key));
   }, []);
+
+  const applyCropOpacityValue = useCallback(
+    (value: string) => {
+      if (value.trim() === "") {
+        editor.im_setCropOpacity(0);
+        return;
+      }
+      const numeric = Number(value);
+      editor.im_setCropOpacity(Number.isFinite(numeric) ? numeric : 0);
+    },
+    [editor]
+  );
+
+  const debouncedCropOpacityUpdate = useMemo(
+    () => debounce(applyCropOpacityValue, 200),
+    [applyCropOpacityValue]
+  );
+
+  useEffect(() => {
+    return () => debouncedCropOpacityUpdate.cancel();
+  }, [debouncedCropOpacityUpdate]);
+
+  const handleCropOpacityChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const nextValue = event.target.value;
+      setCropOpacityInput(nextValue);
+      debouncedCropOpacityUpdate(nextValue);
+    },
+    [debouncedCropOpacityUpdate]
+  );
 
   const applyColor = useCallback(
     (key: EditorColorKey, color: ColorResult, closeAfter: boolean) => {
@@ -143,7 +181,14 @@ const OptionsBar: React.FC<OptionsBarProps> = ({ editor }) => {
             </div>
             <div className="options-group options-group--small">
               <label htmlFor="crop-opacity">Opacity</label>
-              <input id="crop-opacity" type="number" defaultValue={100} />
+              <input
+                id="crop-opacity"
+                type="number"
+                min={0}
+                max={100}
+                value={cropOpacityInput}
+                onChange={handleCropOpacityChange}
+              />
             </div>
           </>
         );

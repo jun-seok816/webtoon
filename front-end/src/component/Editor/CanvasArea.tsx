@@ -211,6 +211,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
         if (res.success && overlayBox) {
           const backgroundColor = editor.pt_colorPalette.pt_primaryColor;
           const textColor = editor.pt_colorPalette.pt_secondaryColor;
+          const editorOpacity = editor.pt_cropOpacity;
           const newOverlay: CropOverlayBox = {
             id: `${itemId}-${Date.now()}-${Math.round(Math.random() * 1000)}`,
             itemId,
@@ -218,6 +219,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
             text: "",
             backgroundColor,
             textColor,
+            opacity: editorOpacity,
           };
 
           editor.im_addCropOverlay(newOverlay);

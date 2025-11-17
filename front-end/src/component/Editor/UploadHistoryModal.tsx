@@ -49,7 +49,7 @@ const UploadHistoryModal: React.FC<UploadHistoryModalProps> = ({ editor }) => {
   const [batches, setBatches] = useState<UploadBatchDto[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<HistoryTab>("user");
+  const [activeTab, setActiveTab] = useState<HistoryTab>("test");
   const requestIdRef = useRef(0);
   const selectedBatch = editor.pt_selectedUploadBatch;
 

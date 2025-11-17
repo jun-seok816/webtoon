@@ -8,4 +8,5 @@ export interface CropOverlayBox {
   text: string;
   backgroundColor: string;
   textColor: string;
+  opacity?: number;
 }

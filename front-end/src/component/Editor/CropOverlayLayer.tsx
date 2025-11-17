@@ -40,9 +40,9 @@ export const CropOverlayLayer: React.FC<CropOverlayLayerProps> = ({
 
   return (
     <div className="scroll-viewer__overlay-layer">
-      {currentBoxes.map((box) => (
-        <CropOverlay key={box.id} box={box} />
-      ))}
+      {currentBoxes.map((box) => {
+        return <CropOverlay key={box.id} box={box} />;
+      })}
     </div>
   );
 };
@@ -57,6 +57,11 @@ const CropOverlay: React.FC<CropOverlayProps> = ({ box }) => {
     setTarget(node);
   }, []);
 
+  const percentToOpacity = useMemo(() => {
+    const clamp = (num: number, min: number, max: number) => Math.min(max, Math.max(min, num));
+    return (percent: number) => clamp(percent / 100, 0, 1);
+  }, []);
+
   return (
     <>
       <div
@@ -67,15 +72,15 @@ const CropOverlay: React.FC<CropOverlayProps> = ({ box }) => {
           left: `${box.x}px`,
           width: `${box.width}px`,
           height: `${box.height}px`,
-          backgroundColor: hexToRgba(box.backgroundColor ?? "#ffffff", 0.22),
+          backgroundColor: hexToRgba(
+            box.backgroundColor ?? "#ffffff",
+            percentToOpacity(box.opacity??100)
+          ),
           borderColor: box.backgroundColor,
         }}
       >
         {box.text && (
-          <div
-            className="crop-overlay__text"
-            style={{ color: box.textColor }}
-          >
+          <div className="crop-overlay__text" style={{ color: box.textColor }}>
             {box.text}
           </div>
         )}

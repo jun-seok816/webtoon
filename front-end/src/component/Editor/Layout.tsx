@@ -31,6 +31,7 @@ export class Editor extends Main {
   private readonly iv_Translate:TranslateClient;
   private readonly iv_colorPalette: ColorPalette;
   private iv_cropBoxes: CropOverlayBox[] = [];
+  private iv_cropOpacity = 100;
   private iv_loginStore: LoginModalState;
   public iv_isFileModalOpen = false;
   public iv_isUploadHistoryOpen = false;
@@ -164,8 +165,25 @@ export class Editor extends Main {
     return this.iv_cropBoxes;
   }
 
+  public get pt_cropOpacity() {
+    return this.iv_cropOpacity;
+  }
+
   public im_addCropOverlay(box: CropOverlayBox) {
-    this.iv_cropBoxes = [...this.iv_cropBoxes, box];
+    const normalizedOverlay: CropOverlayBox = {
+      ...box,
+      opacity: this.im_normalizeCropOpacity(box.opacity),
+    };
+    this.iv_cropBoxes = [...this.iv_cropBoxes, normalizedOverlay];
+    this.im_forceRender();
+  }
+
+  public im_setCropOpacity(nextOpacity: number) {
+    const clamped = this.im_normalizeCropOpacity(nextOpacity, 0);
+    if (this.iv_cropOpacity === clamped) {
+      return;
+    }
+    this.iv_cropOpacity = clamped;
     this.im_forceRender();
   }
 
@@ -181,6 +199,13 @@ export class Editor extends Main {
     if (updated) {
       this.im_forceRender();
     }
+  }
+
+  private im_normalizeCropOpacity(value?: number, fallback?: number) {
+    const base = typeof fallback === "number" ? fallback : this.iv_cropOpacity;
+    const numeric =
+      typeof value === "number" && Number.isFinite(value) ? value : base;
+    return Math.max(0, Math.min(100, Math.round(numeric)));
   }
 
   public im_clearCropOverlays() {
@@ -258,6 +283,9 @@ const Layout: React.FC = () => {
     await editor.pt_loginStore.im_GetSession();
     if(!editor.pt_loginStore.pt_session?.loggedIn){
       editor.im_navigate('/login');
+    }else{
+      editor.iv_isUploadHistoryOpen = true;
+      editor.im_forceRender();
     }
   });
 
