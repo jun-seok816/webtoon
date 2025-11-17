@@ -22,7 +22,7 @@ const RightPanels: React.FC<RightPanelsProps> = ({ editor }) => {
   >("layers");
   const cropLayerItems = editor.pt_cropBoxes ?? [];
   const handleLayerNameChange =
-    (layerId: string) => (event: ChangeEvent<HTMLInputElement>) => {
+    (layerId: string) => (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       editor.im_setCropOverlayText(layerId, event.target.value);
     };
 
@@ -69,14 +69,17 @@ const RightPanels: React.FC<RightPanelsProps> = ({ editor }) => {
                     <li key={layer.id} className="layer-item">
                       <div className="layer-meta">
                         <span className="layer-label">{layer.originText}</span>
-                        <input
-                          type="text"
+                        <textarea
                           className="layer-name layer-name-input"
                           value={layer.text ?? ""}
                           onChange={handleLayerNameChange(layer.id)}
+                          rows={Math.max(1, (layer.text?.split(/\r\n|\r|\n/) ?? [""]).length)}
                         />
                       </div>
-                      <button title="Delete layer">
+                      <button
+                        onClick={() => editor.im_removeCropOverlay(layer.id)}
+                        title="Delete layer"
+                      >
                         <i className="bi bi-trash" aria-hidden="true" />
                       </button>
                     </li>

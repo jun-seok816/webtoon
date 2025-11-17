@@ -201,6 +201,15 @@ export class Editor extends Main {
     }
   }
 
+  public im_removeCropOverlay(id: string) {
+    const nextBoxes = this.iv_cropBoxes.filter((box) => box.id !== id);
+    if (nextBoxes.length === this.iv_cropBoxes.length) {
+      return;
+    }
+    this.iv_cropBoxes = nextBoxes;
+    this.im_forceRender();
+  }
+
   private im_normalizeCropOpacity(value?: number, fallback?: number) {
     const base = typeof fallback === "number" ? fallback : this.iv_cropOpacity;
     const numeric =
