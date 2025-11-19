@@ -160,7 +160,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
   const cropBoxes = editor.pt_cropBoxes;
 
   useEffect(() => {
-    editor.im_clearCropOverlays();
+    editor.im_clearCropOverlays({ skipHistory: true, resetHistory: true });
   }, [editor, selectedBatchId]);
 
   const lftranslate = useCallback(

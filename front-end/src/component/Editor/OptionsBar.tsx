@@ -16,6 +16,8 @@ const OptionsBar: React.FC<OptionsBarProps> = ({ editor }) => {
   const originalLang = editor.pt_originalLang;
   const translatedLang = editor.pt_translatedLang;
   const colorPalette = editor.pt_colorPalette;
+  const canUndo = editor.pt_canUndoCropHistory;
+  const canRedo = editor.pt_canRedoCropHistory;
   const [openPicker, setOpenPicker] = useState<EditorColorKey | null>(null);
   const [cropOpacityInput, setCropOpacityInput] = useState(() =>
     editor.pt_cropOpacity.toString()
@@ -76,6 +78,14 @@ const OptionsBar: React.FC<OptionsBarProps> = ({ editor }) => {
     },
     [colorPalette]
   );
+
+  const handleUndo = useCallback(() => {
+    editor.im_undoCropOverlays();
+  }, [editor]);
+
+  const handleRedo = useCallback(() => {
+    editor.im_redoCropOverlays();
+  }, [editor]);
 
   const renderToolOptions = () => {
     switch (activeTool) {
@@ -222,6 +232,28 @@ const OptionsBar: React.FC<OptionsBarProps> = ({ editor }) => {
       <div className="options-title">{activeTool.toUpperCase()} TOOL</div>
       {renderToolOptions()}
       <div className="options-right">
+        <div className="options-history">
+          <button
+            type="button"
+            className="options-button"
+            onClick={handleUndo}
+            disabled={!canUndo}
+            title="되돌리기 (Ctrl+Z)"
+            aria-label="되돌리기"
+          >
+            <i className="bi bi-arrow-counterclockwise" aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            className="options-button"
+            onClick={handleRedo}
+            disabled={!canRedo}
+            title="다시 실행 (Ctrl+Shift+Z)"
+            aria-label="다시 실행"
+          >
+            <i className="bi bi-arrow-clockwise" aria-hidden="true" />
+          </button>
+        </div>
         <button className="options-button">
           <i className="bi bi-question-circle" aria-hidden="true" /> Learn
         </button>

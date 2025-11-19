@@ -64,6 +64,11 @@
     background: rgba(90, 114, 242, 0.2);
     color: var(--accent-soft);
   }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
 }
 
 .options-right {
@@ -71,6 +76,11 @@
   display: flex;
   align-items: center;
   gap: 0.4rem;
+}
+
+.options-history {
+  display: flex;
+  gap: 0.35rem;
 }
 
 .options-color-controls {

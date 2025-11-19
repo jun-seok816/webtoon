@@ -31,6 +31,9 @@ export class Editor extends Main {
   private readonly iv_Translate:TranslateClient;
   private readonly iv_colorPalette: ColorPalette;
   private iv_cropBoxes: CropOverlayBox[] = [];
+  private iv_cropHistory: CropOverlayBox[][] = [];
+  private iv_cropHistoryIndex = 0;
+  private readonly iv_cropHistoryLimit = 50;
   private iv_cropOpacity = 100;
   private iv_loginStore: LoginModalState;
   public iv_isFileModalOpen = false;
@@ -62,6 +65,7 @@ export class Editor extends Main {
     this.iv_colorPalette = new ColorPalette(() => {
       this.im_forceRender();
     });
+    this.im_initializeCropHistory();
   }
 
   public get pt_activeTool() {
@@ -165,6 +169,14 @@ export class Editor extends Main {
     return this.iv_cropBoxes;
   }
 
+  public get pt_canUndoCropHistory() {
+    return this.iv_cropHistoryIndex > 0;
+  }
+
+  public get pt_canRedoCropHistory() {
+    return this.iv_cropHistoryIndex < this.iv_cropHistory.length - 1;
+  }
+
   public get pt_cropOpacity() {
     return this.iv_cropOpacity;
   }
@@ -174,8 +186,7 @@ export class Editor extends Main {
       ...box,
       opacity: this.im_normalizeCropOpacity(box.opacity),
     };
-    this.iv_cropBoxes = [...this.iv_cropBoxes, normalizedOverlay];
-    this.im_forceRender();
+    this.im_commitCropBoxes([...this.iv_cropBoxes, normalizedOverlay],{recordHistory:false});
   }
 
   public im_setCropOpacity(nextOpacity: number) {
@@ -189,7 +200,7 @@ export class Editor extends Main {
 
   public im_setCropOverlayText(id: string, text: string) {
     let updated = false;
-    this.iv_cropBoxes = this.iv_cropBoxes.map((box) => {
+    const nextBoxes = this.iv_cropBoxes.map((box) => {
       if (box.id === id) {
         updated = true;
         return { ...box, text };
@@ -197,7 +208,7 @@ export class Editor extends Main {
       return box;
     });
     if (updated) {
-      this.im_forceRender();
+      this.im_commitCropBoxes(nextBoxes);
     }
   }
 
@@ -206,8 +217,7 @@ export class Editor extends Main {
     if (nextBoxes.length === this.iv_cropBoxes.length) {
       return;
     }
-    this.iv_cropBoxes = nextBoxes;
-    this.im_forceRender();
+    this.im_commitCropBoxes(nextBoxes);
   }
 
   private im_normalizeCropOpacity(value?: number, fallback?: number) {
@@ -217,12 +227,42 @@ export class Editor extends Main {
     return Math.max(0, Math.min(100, Math.round(numeric)));
   }
 
-  public im_clearCropOverlays() {
-    if (this.iv_cropBoxes.length === 0) {
+  public im_clearCropOverlays(
+    options: { skipHistory?: boolean; resetHistory?: boolean } = {}
+  ) {
+    const skipHistory = options.skipHistory ?? false;
+    const resetHistory = options.resetHistory ?? false;
+    if (this.iv_cropBoxes.length === 0 && !resetHistory) {
       return;
     }
-    this.iv_cropBoxes = [];
-    this.im_forceRender();
+    this.im_commitCropBoxes([], { recordHistory: !skipHistory });
+    if (resetHistory) {
+      this.im_initializeCropHistory();
+    }
+  }
+
+  public im_undoCropOverlays() {
+    if (!this.pt_canUndoCropHistory) {
+      return;
+    }
+    this.iv_cropHistoryIndex -= 1;
+    const snapshot =
+      this.iv_cropHistory[this.iv_cropHistoryIndex] ?? [];
+    this.im_commitCropBoxes(this.im_cloneCropBoxes(snapshot), {
+      recordHistory: false,
+    });
+  }
+
+  public im_redoCropOverlays() {
+    if (!this.pt_canRedoCropHistory) {
+      return;
+    }
+    this.iv_cropHistoryIndex += 1;
+    const snapshot =
+      this.iv_cropHistory[this.iv_cropHistoryIndex] ?? [];
+    this.im_commitCropBoxes(this.im_cloneCropBoxes(snapshot), {
+      recordHistory: false,
+    });
   }
 
   public im_setSelectedUploadBatch(batch: UploadBatchDto | null) {
@@ -281,6 +321,43 @@ export class Editor extends Main {
       items: updatedItems,
     };
 
+    this.im_forceRender();
+  }
+
+  private im_cloneCropBoxes(
+    boxes: CropOverlayBox[]
+  ): CropOverlayBox[] {
+    return boxes.map((box) => ({ ...box }));
+  }
+
+  private im_initializeCropHistory() {
+    this.iv_cropHistory = [this.im_cloneCropBoxes(this.iv_cropBoxes)];
+    this.iv_cropHistoryIndex = 0;
+  }
+
+  private im_pushCropHistorySnapshot(boxes: CropOverlayBox[]) {
+    const historyUpToCurrent = this.iv_cropHistory.slice(
+      0,
+      this.iv_cropHistoryIndex + 1
+    );
+    historyUpToCurrent.push(this.im_cloneCropBoxes(boxes));
+    const overflow = historyUpToCurrent.length - this.iv_cropHistoryLimit;
+    if (overflow > 0) {
+      historyUpToCurrent.splice(0, overflow);
+    }
+    this.iv_cropHistory = historyUpToCurrent;
+    this.iv_cropHistoryIndex = this.iv_cropHistory.length - 1;
+  }
+
+  private im_commitCropBoxes(
+    nextBoxes: CropOverlayBox[],
+    options: { recordHistory?: boolean } = {}
+  ) {
+    const recordHistory = options.recordHistory ?? true;
+    this.iv_cropBoxes = nextBoxes;
+    if (recordHistory) {
+      this.im_pushCropHistorySnapshot(nextBoxes);
+    }
     this.im_forceRender();
   }
 }
