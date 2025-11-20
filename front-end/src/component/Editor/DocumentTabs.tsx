@@ -14,10 +14,12 @@ const DocumentTabs: React.FC<DocumentTabsProps> = ({
   scrollViewportRef,
   imageRefs,
 }) => {
+  const uploadHistory = editor.uploadHistory;
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
-  const selectedItems = editor.pt_selectedUploadBatch?.items ?? [];
-  const selectedBatchId = editor.pt_selectedUploadBatch?.id;
+  const selectedBatch = uploadHistory.currentBatch;
+  const selectedItems = selectedBatch?.items ?? [];
+  const selectedBatchId = selectedBatch?.id;
 
   useEffect(() => {
     setDraggingIndex(null);
@@ -91,12 +93,12 @@ const DocumentTabs: React.FC<DocumentTabsProps> = ({
       }
       event.preventDefault();
       if (draggingIndex !== index) {
-        editor.im_reorderSelectedUploadItems(draggingIndex, index);
+        uploadHistory.reorderSelectedItems(draggingIndex, index);
       }
       setDraggingIndex(null);
       setDragOverIndex(null);
     },
-    [draggingIndex, editor]
+    [draggingIndex, uploadHistory]
   );
 
   const handleTabDragLeave = useCallback(

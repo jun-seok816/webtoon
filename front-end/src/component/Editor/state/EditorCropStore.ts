@@ -1,0 +1,144 @@
+import type { CropOverlayBox } from "../CropOverlayTypes";
+
+type Notify = () => void;
+
+export class EditorCropStore {
+  private cropBoxes: CropOverlayBox[] = [];
+  private cropHistory: CropOverlayBox[][] = [];
+  private cropHistoryIndex = 0;
+  private readonly cropHistoryLimit = 50;
+  private cropOpacityValue = 100;
+
+  constructor(private readonly notify: Notify) {
+    this.initializeHistory();
+  }
+
+  public get boxes() {
+    return this.cropBoxes;
+  }
+
+  public get opacity() {
+    return this.cropOpacityValue;
+  }
+
+  public setOpacity(nextOpacity: number) {
+    const clamped = this.normalizeOpacity(nextOpacity, 0);
+    if (this.cropOpacityValue === clamped) {
+      return;
+    }
+    this.cropOpacityValue = clamped;
+    this.notify();
+  }
+
+  public get canUndo() {
+    return this.cropHistoryIndex > 0;
+  }
+
+  public get canRedo() {
+    return this.cropHistoryIndex < this.cropHistory.length - 1;
+  }
+
+  public addOverlay(box: CropOverlayBox) {
+    const normalizedOverlay: CropOverlayBox = {
+      ...box,
+      opacity: this.normalizeOpacity(box.opacity),
+    };
+    this.commitBoxes([...this.cropBoxes, normalizedOverlay], {
+      recordHistory: false,
+    });
+  }
+
+  public setOverlayText(id: string, text: string) {
+    let updated = false;
+    const nextBoxes = this.cropBoxes.map((box) => {
+      if (box.id === id) {
+        updated = true;
+        return { ...box, text };
+      }
+      return box;
+    });
+    if (updated) {
+      this.commitBoxes(nextBoxes);
+    }
+  }
+
+  public removeOverlay(id: string) {
+    const nextBoxes = this.cropBoxes.filter((box) => box.id !== id);
+    if (nextBoxes.length === this.cropBoxes.length) {
+      return;
+    }
+    this.commitBoxes(nextBoxes);
+  }
+
+  public clear(options: { skipHistory?: boolean; resetHistory?: boolean } = {}) {
+    const skipHistory = options.skipHistory ?? false;
+    const resetHistory = options.resetHistory ?? false;
+    if (this.cropBoxes.length === 0 && !resetHistory) {
+      return;
+    }
+    this.commitBoxes([], { recordHistory: !skipHistory });
+    if (resetHistory) {
+      this.initializeHistory();
+    }
+  }
+
+  public undo() {
+    if (!this.canUndo) {
+      return;
+    }
+    this.cropHistoryIndex -= 1;
+    const snapshot = this.cropHistory[this.cropHistoryIndex] ?? [];
+    this.commitBoxes(this.cloneBoxes(snapshot), { recordHistory: false });
+  }
+
+  public redo() {
+    if (!this.canRedo) {
+      return;
+    }
+    this.cropHistoryIndex += 1;
+    const snapshot = this.cropHistory[this.cropHistoryIndex] ?? [];
+    this.commitBoxes(this.cloneBoxes(snapshot), { recordHistory: false });
+  }
+
+  private normalizeOpacity(value?: number, fallback?: number) {
+    const base = typeof fallback === "number" ? fallback : this.cropOpacityValue;
+    const numeric =
+      typeof value === "number" && Number.isFinite(value) ? value : base;
+    return Math.max(0, Math.min(100, Math.round(numeric)));
+  }
+
+  private cloneBoxes(boxes: CropOverlayBox[]) {
+    return boxes.map((box) => ({ ...box }));
+  }
+
+  private initializeHistory() {
+    this.cropHistory = [this.cloneBoxes(this.cropBoxes)];
+    this.cropHistoryIndex = 0;
+  }
+
+  private pushHistorySnapshot(boxes: CropOverlayBox[]) {
+    const historyUpToCurrent = this.cropHistory.slice(
+      0,
+      this.cropHistoryIndex + 1
+    );
+    historyUpToCurrent.push(this.cloneBoxes(boxes));
+    const overflow = historyUpToCurrent.length - this.cropHistoryLimit;
+    if (overflow > 0) {
+      historyUpToCurrent.splice(0, overflow);
+    }
+    this.cropHistory = historyUpToCurrent;
+    this.cropHistoryIndex = this.cropHistory.length - 1;
+  }
+
+  private commitBoxes(
+    nextBoxes: CropOverlayBox[],
+    options: { recordHistory?: boolean } = {}
+  ) {
+    const recordHistory = options.recordHistory ?? true;
+    this.cropBoxes = nextBoxes;
+    if (recordHistory) {
+      this.pushHistorySnapshot(nextBoxes);
+    }
+    this.notify();
+  }
+}

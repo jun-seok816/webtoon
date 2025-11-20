@@ -20,10 +20,11 @@ const RightPanels: React.FC<RightPanelsProps> = ({ editor }) => {
   const [activeTab, setActiveTab] = useState<
     "layers" | "properties" | "history"
   >("layers");
-  const cropLayerItems = editor.pt_cropBoxes ?? [];
+  const cropStore = editor.crops;
+  const cropLayerItems = cropStore.boxes ?? [];
   const handleLayerNameChange =
     (layerId: string) => (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-      editor.im_setCropOverlayText(layerId, event.target.value);
+      cropStore.setOverlayText(layerId, event.target.value);
     };
 
   return (
@@ -77,7 +78,7 @@ const RightPanels: React.FC<RightPanelsProps> = ({ editor }) => {
                         />
                       </div>
                       <button
-                        onClick={() => editor.im_removeCropOverlay(layer.id)}
+                        onClick={() => cropStore.removeOverlay(layer.id)}
                         title="Delete layer"
                       >
                         <i className="bi bi-trash" aria-hidden="true" />

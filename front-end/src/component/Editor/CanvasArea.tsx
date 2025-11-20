@@ -150,18 +150,23 @@ const getDisplayedCropBox = (
 const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
   const scrollViewportRef = useRef<HTMLDivElement | null>(null);
   const imageRefs = useRef<Map<string | number, HTMLImageElement>>(new Map());
-  const selectedBatch = editor.pt_selectedUploadBatch;
+  const toolStore = editor.tools;
+  const cropStore = editor.crops;
+  const colorPalette = editor.colorPalette;
+  const ocrClient = editor.ocrClient;
+  const translateClient = editor.translateClient;
+  const selectedBatch = editor.uploadHistory.currentBatch;
   const selectedItems = useMemo(
     () => selectedBatch?.items ?? [],
     [selectedBatch]
   );
   const selectedBatchId = selectedBatch?.id ?? null;
   const [crop, setCrop] = useState<Crop | undefined>(undefined);
-  const cropBoxes = editor.pt_cropBoxes;
+  const cropBoxes = cropStore.boxes;
 
   useEffect(() => {
-    editor.im_clearCropOverlays({ skipHistory: true, resetHistory: true });
-  }, [editor, selectedBatchId]);
+    cropStore.clear({ skipHistory: true, resetHistory: true });
+  }, [cropStore, selectedBatchId]);
 
   const lftranslate = useCallback(
     async (ocr: OcrResponseBody): Promise<TranslateResponseBody | null> => {
@@ -171,19 +176,19 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
 
       const payload: TranslateRequestBody = {
         text: ocr.text,
-        sourceLang: editor.pt_originalLang,
-        targetLang: editor.pt_translatedLang,
+        sourceLang: toolStore.originalLang,
+        targetLang: toolStore.translatedLang,
       };
 
       try {
-        editor.pt_translateClient.im_ClearResponse();
-        return await editor.pt_translateClient.im_Translate(payload);
+        translateClient.im_ClearResponse();
+        return await translateClient.im_Translate(payload);
       } catch (error) {
         console.error("[CanvasArea] 번역 요청 실패", error);
         return null;
       }
     },
-    [editor.pt_originalLang, editor.pt_translateClient, editor.pt_translatedLang]
+    [toolStore, translateClient]
   );
 
   const handleCropComplete = useCallback(
@@ -199,19 +204,19 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
 
       const overlayBox = getDisplayedCropBox(imageElement, completedCrop);
       const payload: OcrRequestBody = {
-        language: editor.pt_originalLang,
+        language: toolStore.originalLang,
         batchId: selectedBatchId ?? -1,
         image: imageDataUrl,
       };
 
       try {
-        const res = await editor.pt_ocrClient.im_RequestOcr(payload);
+        const res = await ocrClient.im_RequestOcr(payload);
         const translationPromise = lftranslate(res);
 
         if (res.success && overlayBox) {
-          const backgroundColor = editor.pt_colorPalette.pt_primaryColor;
-          const textColor = editor.pt_colorPalette.pt_secondaryColor;
-          const editorOpacity = editor.pt_cropOpacity;
+          const backgroundColor = colorPalette.pt_primaryColor;
+          const textColor = colorPalette.pt_secondaryColor;
+          const editorOpacity = cropStore.opacity;
           const newOverlay: CropOverlayBox = {
             id: `${itemId}-${Date.now()}-${Math.round(Math.random() * 1000)}`,
             itemId,
@@ -223,7 +228,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
             opacity: editorOpacity,
           };
 
-          editor.im_addCropOverlay(newOverlay);
+          cropStore.addOverlay(newOverlay);
 
           translationPromise
             .then((translationRes) => {
@@ -231,10 +236,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
                 return;
               }
 
-              editor.im_setCropOverlayText(
-                newOverlay.id,
-                translationRes.translatedText
-              );
+              cropStore.setOverlayText(newOverlay.id, translationRes.translatedText);
             })
             .catch((error) => {
               console.error("[CanvasArea] 번역 결과 업데이트 실패", error);
@@ -244,7 +246,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
         console.error("[CanvasArea] OCR 요청 실패", error);
       }
     },
-    [editor, lftranslate, selectedBatchId]
+    [colorPalette, cropStore, lftranslate, ocrClient, selectedBatchId, toolStore]
   );
 
   return (

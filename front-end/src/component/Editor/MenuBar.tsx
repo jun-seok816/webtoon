@@ -11,11 +11,12 @@ type MenuBarProps = {
 };
 
 const FileUploadModal: React.FC<MenuBarProps> = ({ editor }) => {
-  const upload: Upload | undefined = editor.pt_upload;
-  const loading: Loading | undefined = editor.pt_loading;
-  const selectedFiles = editor.pt_selectedFiles;
-  const isUploading = editor.pt_isUploading;
-  const title = editor.pt_uploadTitle;
+  const upload: Upload | undefined = editor.upload;
+  const loading: Loading | undefined = editor.loading;
+  const uiStore = editor.ui;
+  const selectedFiles = uiStore.selectedFiles;
+  const isUploading = uiStore.isUploading;
+  const title = uiStore.uploadTitle;
 
   const throttledRender = useMemo(() => {
     if (!upload) return null;
@@ -76,33 +77,26 @@ const FileUploadModal: React.FC<MenuBarProps> = ({ editor }) => {
   );
 
   const resetModalState = useCallback(() => {
-    editor.iv_isFileModalOpen = false;
-    editor.iv_selectedFiles = [];
-    editor.iv_uploadTitle = "";
-    editor.iv_isUploading = false;
-    editor.im_forceRender();
-  }, [editor]);
+    uiStore.resetUploadModalState();
+  }, [uiStore]);
 
   const handleClose = useCallback(() => {
-    if (editor.iv_isUploading) return;
+    if (uiStore.isUploading) return;
     resetModalState();
-  }, [editor, resetModalState]);
+  }, [resetModalState, uiStore]);
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files ?? []);
     event.target.value = "";
-    editor.iv_selectedFiles = [...files];
-    editor.im_forceRender();
+    uiStore.setSelectedFiles(files);
   };
 
   const handleTitleChange = (value: string) => {
-    if (editor.iv_uploadTitle === value) return;
-    editor.iv_uploadTitle = value;
-    editor.im_forceRender();
+    uiStore.setUploadTitle(value);
   };
 
   const handleConfirm = useCallback(async () => {
-    const files = editor.pt_selectedFiles;
+    const files = uiStore.selectedFiles;
     if (files.length === 0) {
       resetModalState();
       return;
@@ -116,11 +110,10 @@ const FileUploadModal: React.FC<MenuBarProps> = ({ editor }) => {
 
     const ensuredUpload = upload;
     const ensuredLoading = loading;
-    editor.iv_isUploading = true;
-    editor.im_forceRender();
+    uiStore.setIsUploading(true);
     try {
       const prevCount = ensuredUpload.pt_items.length;
-      ensuredUpload.pt_Title = editor.pt_uploadTitle;
+      ensuredUpload.pt_Title = uiStore.uploadTitle;
       await addFiles(files);
       const appendedCount = ensuredUpload.pt_items.length - prevCount;
 
@@ -163,9 +156,10 @@ const FileUploadModal: React.FC<MenuBarProps> = ({ editor }) => {
       ensuredLoading.iv_per = 0;
       ensuredLoading.is_loading = false;
       ensuredUpload.im_forceRender();
+      uiStore.setIsUploading(false);
       resetModalState();
     }
-  }, [addFiles, editor, loading, resetModalState, upload]);
+  }, [addFiles, loading, resetModalState, uiStore, upload]);
 
   if (!upload || !loading) {
     return null;
@@ -260,25 +254,23 @@ const FileUploadModal: React.FC<MenuBarProps> = ({ editor }) => {
 };
 
 const MenuBar: React.FC<MenuBarProps> = ({ editor }) => {
-  const upload: Upload | undefined = editor.pt_upload;
-  const isFileModalOpen = editor.pt_isFileModalOpen;
-  const isUploadHistoryOpen = editor.pt_isUploadHistoryOpen;
+  const upload: Upload | undefined = editor.upload;
+  const uiStore = editor.ui;
+  const isFileModalOpen = uiStore.isFileModalOpen;
+  const isUploadHistoryOpen = uiStore.isUploadHistoryOpen;
   const menuItems = ["File", "Edit", "Uploads"] as const;
 
   const handleFileMenuClick = () => {
-    editor.iv_isUploadHistoryOpen = false;
-    editor.iv_uploadTitle = upload ? upload.pt_Title : "";
-    editor.iv_selectedFiles = [];
-    editor.iv_isUploading = false;
-    editor.iv_isFileModalOpen = true;
-    editor.im_forceRender();
+    uiStore.openFileModal();
+    uiStore.setUploadTitle(upload ? upload.pt_Title : "");
+    uiStore.setSelectedFiles([]);
+    uiStore.setIsUploading(false);
   };
 
   const handleUploadsMenuClick = () => {
-    editor.iv_isFileModalOpen = false;
-    editor.iv_isUploading = false;
-    editor.iv_isUploadHistoryOpen = true;
-    editor.im_forceRender();
+    uiStore.openUploadHistory();
+    uiStore.resetSelectedFiles();
+    uiStore.setIsUploading(false);
   };  
 
   return (

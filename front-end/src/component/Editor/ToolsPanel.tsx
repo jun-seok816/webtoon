@@ -14,9 +14,10 @@ const tools = [
 ];
 
 const ToolsPanel: React.FC<ToolsPanelProps> = ({ editor }) => {
-  const activeTool = editor.pt_activeTool;
+  const toolStore = editor.tools;
+  const activeTool = toolStore.activeTool;
   const navigate = useNavigate();
-  const loginStore = editor.pt_loginStore;
+  const loginStore = editor.loginStore;
   const session = loginStore.pt_session;
   const isLoggingOut = loginStore.pt_isLoggingOut;
   const isLoggedIn = session?.loggedIn ?? false;
@@ -46,7 +47,7 @@ const ToolsPanel: React.FC<ToolsPanelProps> = ({ editor }) => {
         <button
           key={tool.id}
           className={`tool-button ${activeTool === tool.id ? "active" : ""}`}
-          onClick={() => editor.im_setActiveTool(tool.id)}
+          onClick={() => toolStore.setActiveTool(tool.id)}
           title={tool.label}
         >
           <i className={`bi ${tool.icon}`} aria-hidden="true" />

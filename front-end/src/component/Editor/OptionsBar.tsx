@@ -12,15 +12,18 @@ interface OptionsBarProps {
 }
 
 const OptionsBar: React.FC<OptionsBarProps> = ({ editor }) => {
-  const activeTool = editor.pt_activeTool;
-  const originalLang = editor.pt_originalLang;
-  const translatedLang = editor.pt_translatedLang;
-  const colorPalette = editor.pt_colorPalette;
-  const canUndo = editor.pt_canUndoCropHistory;
-  const canRedo = editor.pt_canRedoCropHistory;
+  const toolStore = editor.tools;
+  const cropStore = editor.crops;
+  const colorPalette = editor.colorPalette;
+  const activeTool = toolStore.activeTool;
+  const originalLang = toolStore.originalLang;
+  const translatedLang = toolStore.translatedLang;
+  const canUndo = cropStore.canUndo;
+  const canRedo = cropStore.canRedo;
   const [openPicker, setOpenPicker] = useState<EditorColorKey | null>(null);
+  const cropOpacity = cropStore.opacity;
   const [cropOpacityInput, setCropOpacityInput] = useState(() =>
-    editor.pt_cropOpacity.toString()
+    cropOpacity.toString()
   );
 
   const colorControls = useMemo(
@@ -32,8 +35,8 @@ const OptionsBar: React.FC<OptionsBarProps> = ({ editor }) => {
   );
 
   useEffect(() => {
-    setCropOpacityInput(editor.pt_cropOpacity.toString());
-  }, [editor.pt_cropOpacity]);
+    setCropOpacityInput(cropOpacity.toString());
+  }, [cropOpacity]);
 
   const togglePicker = useCallback((key: EditorColorKey) => {
     setOpenPicker((previous) => (previous === key ? null : key));
@@ -42,13 +45,13 @@ const OptionsBar: React.FC<OptionsBarProps> = ({ editor }) => {
   const applyCropOpacityValue = useCallback(
     (value: string) => {
       if (value.trim() === "") {
-        editor.im_setCropOpacity(0);
+        cropStore.setOpacity(0);
         return;
       }
       const numeric = Number(value);
-      editor.im_setCropOpacity(Number.isFinite(numeric) ? numeric : 0);
+      cropStore.setOpacity(Number.isFinite(numeric) ? numeric : 0);
     },
-    [editor]
+    [cropStore]
   );
 
   const debouncedCropOpacityUpdate = useMemo(
@@ -80,12 +83,12 @@ const OptionsBar: React.FC<OptionsBarProps> = ({ editor }) => {
   );
 
   const handleUndo = useCallback(() => {
-    editor.im_undoCropOverlays();
-  }, [editor]);
+    cropStore.undo();
+  }, [cropStore]);
 
   const handleRedo = useCallback(() => {
-    editor.im_redoCropOverlays();
-  }, [editor]);
+    cropStore.redo();
+  }, [cropStore]);
 
   const renderToolOptions = () => {
     switch (activeTool) {
@@ -125,7 +128,9 @@ const OptionsBar: React.FC<OptionsBarProps> = ({ editor }) => {
                 id="original-lang"
                 value={originalLang}
                 onChange={(event) =>
-                  editor.im_setOriginalLang(event.target.value as AppLanguageCode)
+                  toolStore.setOriginalLang(
+                    event.target.value as AppLanguageCode
+                  )
                 }
               >
                 <option value="kor">한국어</option>
@@ -140,7 +145,9 @@ const OptionsBar: React.FC<OptionsBarProps> = ({ editor }) => {
                 id="translated-lang"
                 value={translatedLang}
                 onChange={(event) =>
-                  editor.im_setTranslatedLang(event.target.value as AppLanguageCode)
+                  toolStore.setTranslatedLang(
+                    event.target.value as AppLanguageCode
+                  )
                 }
               >
                 <option value="kor">한국어</option>

@@ -51,12 +51,13 @@ const UploadHistoryModal: React.FC<UploadHistoryModalProps> = ({ editor }) => {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<HistoryTab>("test");
   const requestIdRef = useRef(0);
-  const selectedBatch = editor.pt_selectedUploadBatch;
+  const uiStore = editor.ui;
+  const uploadHistory = editor.uploadHistory;
+  const selectedBatch = uploadHistory.currentBatch;
 
   const handleClose = useCallback(() => {
-    editor.iv_isUploadHistoryOpen = false;
-    editor.im_forceRender();
-  }, [editor]);
+    uiStore.closeUploadHistory();
+  }, [uiStore]);
 
   const loadHistory = useCallback(
     async (variant: HistoryTab) => {
@@ -65,7 +66,7 @@ const UploadHistoryModal: React.FC<UploadHistoryModalProps> = ({ editor }) => {
       setError(null);
 
       try {
-        const data = await editor.im_loadHistory(variant);
+        const data = await uploadHistory.loadHistory(variant);
 
         if (requestId !== requestIdRef.current) {
           return;
@@ -108,7 +109,7 @@ const UploadHistoryModal: React.FC<UploadHistoryModalProps> = ({ editor }) => {
         setIsLoading(false);
       }
     },
-    [editor]
+    [uploadHistory]
   );
 
   useEffect(() => {
@@ -137,9 +138,9 @@ const UploadHistoryModal: React.FC<UploadHistoryModalProps> = ({ editor }) => {
   const handleBatchSelect = useCallback(
     (batch: UploadBatchDto) => {
       handleClose();
-      editor.im_setSelectedUploadBatch(batch);
+      uploadHistory.setCurrentBatch(batch);
     },
-    [editor, handleClose]
+    [handleClose, uploadHistory]
   );
 
   const handleBatchKeyDown = useCallback(
@@ -147,10 +148,10 @@ const UploadHistoryModal: React.FC<UploadHistoryModalProps> = ({ editor }) => {
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
         handleClose();
-        editor.im_setSelectedUploadBatch(batch);
+        uploadHistory.setCurrentBatch(batch);
       }
     },
-    [editor, handleClose]
+    [handleClose, uploadHistory]
   );
 
   const summaryText = isLoading

@@ -28,7 +28,7 @@ export const CropOverlayLayer: React.FC<CropOverlayLayerProps> = ({
   editor,
   itemId,
 }) => {
-  const cropBoxes = editor.pt_cropBoxes;
+  const cropBoxes = editor.crops.boxes;
   const currentBoxes = useMemo(
     () => cropBoxes.filter((box) => box.itemId === itemId),
     [cropBoxes, itemId]
