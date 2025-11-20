@@ -279,6 +279,8 @@
   justify-content: center;
   align-items: center;
   text-align: center;
+  pointer-events: auto;
+  cursor: move;
 }
 
 .crop-overlay__text {

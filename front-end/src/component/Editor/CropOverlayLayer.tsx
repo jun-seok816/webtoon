@@ -1,5 +1,11 @@
-import React, { useCallback, useMemo, useState } from "react";
-import Moveable from "react-moveable";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import Moveable, { type OnDrag, type OnDragEnd } from "react-moveable";
 import type { Editor } from "./Layout";
 import type { CropOverlayBox } from "./CropOverlayTypes";
 
@@ -41,7 +47,7 @@ export const CropOverlayLayer: React.FC<CropOverlayLayerProps> = ({
   return (
     <div className="scroll-viewer__overlay-layer">
       {currentBoxes.map((box) => {
-        return <CropOverlay key={box.id} box={box} />;
+        return <CropOverlay key={box.id} editor={editor} box={box} />;
       })}
     </div>
   );
@@ -49,18 +55,77 @@ export const CropOverlayLayer: React.FC<CropOverlayLayerProps> = ({
 
 interface CropOverlayProps {
   box: CropOverlayBox;
+  editor: Editor;
 }
 
-const CropOverlay: React.FC<CropOverlayProps> = ({ box }) => {
+const CropOverlay: React.FC<CropOverlayProps> = ({ box, editor }) => {
+  const cropStore = editor.crops;
   const [target, setTarget] = useState<HTMLDivElement | null>(null);
   const handleRef = useCallback((node: HTMLDivElement | null) => {
     setTarget(node);
   }, []);
+  const latestBoxRef = useRef({
+    x: box.x,
+    y: box.y,
+    width: box.width,
+    height: box.height,
+  });
+
+  useEffect(() => {
+    latestBoxRef.current = {
+      x: box.x,
+      y: box.y,
+      width: box.width,
+      height: box.height,
+    };
+    if (target) {
+      target.style.transform = "translate(0px, 0px)";
+    }
+  }, [box.height, box.width, box.x, box.y, target]);
 
   const percentToOpacity = useMemo(() => {
-    const clamp = (num: number, min: number, max: number) => Math.min(max, Math.max(min, num));
+    const clamp = (num: number, min: number, max: number) =>
+      Math.min(max, Math.max(min, num));
     return (percent: number) => clamp(percent / 100, 0, 1);
   }, []);
+
+  const handleDrag = useCallback(
+    ({
+      target: dragTarget,
+      left,
+      top,
+    }: {
+      target: any;
+      left: any;
+      top: any;
+    }) => {
+      if (!dragTarget) {
+        return;
+      }
+      dragTarget.style.left = `${left}px`;
+      dragTarget.style.top = `${top}px`;
+      dragTarget.style.transform = "translate(0px, 0px)";
+      latestBoxRef.current = {
+        ...latestBoxRef.current,
+        x: left,
+        y: top,
+      };
+    },
+    []
+  );
+
+  const handleDragEnd = useCallback(() => {
+    const { x, y, width, height } = latestBoxRef.current;
+    if (
+      x === box.x &&
+      y === box.y &&
+      width === box.width &&
+      height === box.height
+    ) {
+      return;
+    }
+    cropStore.updateOverlayBox(box.id, { x, y, width, height });
+  }, [box.height, box.id, box.width, box.x, box.y, cropStore]);
 
   return (
     <>
@@ -68,13 +133,15 @@ const CropOverlay: React.FC<CropOverlayProps> = ({ box }) => {
         ref={handleRef}
         className="crop-overlay"
         style={{
+          pointerEvents: "auto",
           top: `${box.y}px`,
           left: `${box.x}px`,
           width: `${box.width}px`,
           height: `${box.height}px`,
+          transform: "translate(0px, 0px)",
           backgroundColor: hexToRgba(
             box.backgroundColor ?? "#ffffff",
-            percentToOpacity(box.opacity??100)
+            percentToOpacity(box.opacity ?? 100)
           ),
           borderColor: box.backgroundColor,
         }}
@@ -88,7 +155,7 @@ const CropOverlay: React.FC<CropOverlayProps> = ({ box }) => {
       {target && (
         <Moveable
           target={target}
-          draggable={false}
+          draggable
           resizable={false}
           scalable={false}
           rotatable={false}
@@ -96,6 +163,8 @@ const CropOverlay: React.FC<CropOverlayProps> = ({ box }) => {
           edgeDraggable={false}
           origin={false}
           hideDefaultLines={false}
+          onDrag={handleDrag}
+          onDragEnd={handleDragEnd}
         />
       )}
     </>

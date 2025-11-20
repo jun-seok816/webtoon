@@ -62,6 +62,30 @@ export class EditorCropStore {
     }
   }
 
+  public updateOverlayBox(
+    id: string,
+    nextBox: Partial<Pick<CropOverlayBox, "x" | "y" | "width" | "height">>,
+    options: { recordHistory?: boolean } = {}
+  ) {
+    const recordHistory = options.recordHistory ?? true;
+    let updated = false;
+    const nextBoxes = this.cropBoxes.map((box) => {
+      if (box.id !== id) {
+        return box;
+      }
+      updated = true;
+      const nextX = this.normalizeNumericValue(nextBox.x, box.x);
+      const nextY = this.normalizeNumericValue(nextBox.y, box.y);
+      const nextWidth = this.normalizeDimension(nextBox.width, box.width);
+      const nextHeight = this.normalizeDimension(nextBox.height, box.height);
+      return { ...box, x: nextX, y: nextY, width: nextWidth, height: nextHeight };
+    });
+
+    if (updated) {
+      this.commitBoxes(nextBoxes, { recordHistory });
+    }
+  }
+
   public removeOverlay(id: string) {
     const nextBoxes = this.cropBoxes.filter((box) => box.id !== id);
     if (nextBoxes.length === this.cropBoxes.length) {
@@ -105,6 +129,15 @@ export class EditorCropStore {
     const numeric =
       typeof value === "number" && Number.isFinite(value) ? value : base;
     return Math.max(0, Math.min(100, Math.round(numeric)));
+  }
+
+  private normalizeNumericValue(value: number | undefined, fallback: number) {
+    return typeof value === "number" && Number.isFinite(value) ? value : fallback;
+  }
+
+  private normalizeDimension(value: number | undefined, fallback: number) {
+    const normalized = this.normalizeNumericValue(value, fallback);
+    return Math.max(1, normalized);
   }
 
   private cloneBoxes(boxes: CropOverlayBox[]) {
