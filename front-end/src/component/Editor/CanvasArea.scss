@@ -36,6 +36,36 @@
   border-radius: 999px;
 }
 
+.canvas-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: 1rem;
+  flex-shrink: 0;
+}
+
+.canvas-header__button {
+  padding: 0.35rem 0.9rem;
+  border-radius: 8px;
+  border: none;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #0f1118;
+  background: linear-gradient(90deg, var(--accent), var(--accent-soft));
+  box-shadow: 0 8px 16px rgba(90, 114, 242, 0.25);
+  transition: opacity 0.2s ease, transform 0.1s ease;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+
+  &:not(:disabled):hover {
+    transform: translateY(-1px);
+  }
+}
+
 .document-tabs {
   display: flex;
   align-items: stretch;

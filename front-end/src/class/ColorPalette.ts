@@ -13,7 +13,7 @@ export class ColorPalette {
     this.iv_forceRender = forceRender;
     this.iv_colors = {
       primary: this.im_formatColor(options?.initialPrimary ?? "#ffffff"),
-      secondary: this.im_formatColor(options?.initialSecondary ?? "#ff6b6b"),
+      secondary: this.im_formatColor(options?.initialSecondary ?? "#000000"),
     };
   }
 

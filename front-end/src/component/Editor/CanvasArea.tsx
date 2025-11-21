@@ -22,6 +22,19 @@ interface CanvasAreaProps {
   editor: Editor;
 }
 
+type RoboFlowBBox = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  page?: number;
+  text?: string;
+};
+
+type RoboFlowDetection = {
+  bbox?: RoboFlowBBox;
+};
+
 const clamp = (value: number, min: number, max: number) =>
   Math.min(Math.max(value, min), max);
 
@@ -114,6 +127,80 @@ const cropImageToBase64 = (
   return canvas.toDataURL(mimeType);
 };
 
+const waitForImageReady = (image: HTMLImageElement) =>
+  new Promise<void>((resolve, reject) => {
+    if (image.complete && image.naturalWidth > 0 && image.naturalHeight > 0) {
+      resolve();
+      return;
+    }
+
+    const handleLoad = () => {
+      cleanup();
+      resolve();
+    };
+
+    const handleError = () => {
+      cleanup();
+      reject(new Error("이미지를 불러오지 못했습니다."));
+    };
+
+    const cleanup = () => {
+      image.removeEventListener("load", handleLoad);
+      image.removeEventListener("error", handleError);
+    };
+
+    image.addEventListener("load", handleLoad, { once: true });
+    image.addEventListener("error", handleError, { once: true });
+  });
+
+const getDisplayedBoxFromDetection = (
+  image: HTMLImageElement,
+  bbox: RoboFlowBBox | undefined
+): Pick<CropOverlayBox, "x" | "y" | "width" | "height"> | null => {
+  if (!bbox) {
+    return null;
+  }
+
+  const naturalWidth = image.naturalWidth;
+  const naturalHeight = image.naturalHeight;
+  const displayedWidth = image.width;
+  const displayedHeight = image.height;
+
+  if (
+    !naturalWidth ||
+    !naturalHeight ||
+    !displayedWidth ||
+    !displayedHeight ||
+    !bbox.width ||
+    !bbox.height
+  ) {
+    return null;
+  }
+
+  const normalizedX = clamp(Math.round(bbox.x), 0, naturalWidth - 1);
+  const normalizedY = clamp(Math.round(bbox.y), 0, naturalHeight - 1);
+  const normalizedWidth = clamp(
+    Math.round(bbox.width),
+    1,
+    naturalWidth - normalizedX
+  );
+  const normalizedHeight = clamp(
+    Math.round(bbox.height),
+    1,
+    naturalHeight - normalizedY
+  );
+
+  const scaleX = displayedWidth / naturalWidth;
+  const scaleY = displayedHeight / naturalHeight;
+
+  return {
+    x: Math.round(normalizedX * scaleX),
+    y: Math.round(normalizedY * scaleY),
+    width: Math.round(normalizedWidth * scaleX),
+    height: Math.round(normalizedHeight * scaleY),
+  };
+};
+
 const getDisplayedCropBox = (
   image: HTMLImageElement,
   crop: Crop | undefined
@@ -155,6 +242,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
   const colorPalette = editor.colorPalette;
   const ocrClient = editor.ocrClient;
   const translateClient = editor.translateClient;
+  const roboFlow = editor.roboFlow;
   const selectedBatch = editor.uploadHistory.currentBatch;
   const selectedItems = useMemo(
     () => selectedBatch?.items ?? [],
@@ -163,6 +251,9 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
   const selectedBatchId = selectedBatch?.id ?? null;
   const [crop, setCrop] = useState<Crop | undefined>(undefined);
   const cropBoxes = cropStore.boxes;
+  const [isAutoProcessing, setIsAutoProcessing] = useState(false);
+  const isAutoDetecting = roboFlow?.pt_loading ?? false;
+  const isRunningAuto = isAutoDetecting || isAutoProcessing;
 
   useEffect(() => {
     cropStore.clear({ skipHistory: true, resetHistory: true });
@@ -190,6 +281,125 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
     },
     [toolStore, translateClient]
   );
+
+  const handleAutoDetect = useCallback(async () => {
+    if (!roboFlow || selectedItems.length === 0 || isAutoProcessing) {
+      return;
+    }
+
+    setIsAutoProcessing(true);
+    try {
+      const backgroundColor = colorPalette.pt_primaryColor;
+      const textColor = colorPalette.pt_secondaryColor;
+      const editorOpacity = cropStore.opacity;
+
+      for (const [index, item] of selectedItems.entries()) {
+        const imageElement = imageRefs.current.get(item.id);
+        if (!imageElement) {
+          continue;
+        }
+
+        try {
+          await waitForImageReady(imageElement);
+        } catch (error) {
+          console.error("[CanvasArea] 이미지 로드 실패", error);
+          continue;
+        }
+
+        try {
+          await roboFlow.im_RobotFlowStart(imageElement, index + 1);
+        } catch (error) {
+          console.error("[CanvasArea] RoboFlow 자동 탐지 실패", error);
+          continue;
+        }
+
+        const detections = (roboFlow.pt_result ?? []) as RoboFlowDetection[];
+        if (detections.length === 0) {
+          continue;
+        }
+
+        for (const detection of detections) {
+          const overlayBox = getDisplayedBoxFromDetection(
+            imageElement,
+            detection?.bbox
+          );
+          if (!overlayBox) {
+            continue;
+          }
+
+          const detectionCrop: Crop = {
+            unit: "px",
+            ...overlayBox,
+          };
+
+          const imageDataUrl = cropImageToBase64(imageElement, detectionCrop);
+          if (!imageDataUrl) {
+            continue;
+          }
+
+          const payload: OcrRequestBody = {
+            language: toolStore.originalLang,
+            batchId: selectedBatchId ?? -1,
+            image: imageDataUrl,
+          };
+
+          try {
+            const res = await ocrClient.im_RequestOcr(payload);
+            const translationPromise = lftranslate(res);
+
+            if (res.success) {
+              const newOverlay: CropOverlayBox = {
+                id: `auto-${item.id}-${Date.now()}-${Math.round(
+                  Math.random() * 1000
+                )}`,
+                itemId: item.id,
+                ...overlayBox,
+                originText: res.text,
+                text: "",
+                backgroundColor,
+                textColor,
+                opacity: editorOpacity,
+              };
+
+              cropStore.addOverlay(newOverlay);
+
+              translationPromise
+                .then((translationRes) => {
+                  if (!translationRes?.success) {
+                    return;
+                  }
+                  cropStore.setOverlayText(
+                    newOverlay.id,
+                    translationRes.translatedText
+                  );
+                })
+                .catch((error) => {
+                  console.error(
+                    "[CanvasArea] 자동 번역 결과 업데이트 실패",
+                    error
+                  );
+                });
+            }
+          } catch (error) {
+            console.error("[CanvasArea] 자동 번역 파이프라인 실패", error);
+          }
+        }
+      }
+    } finally {
+      setIsAutoProcessing(false);
+    }
+  }, [
+    colorPalette,
+    cropStore,
+    imageRefs,
+    isAutoProcessing,
+    lftranslate,
+    ocrClient,
+    roboFlow,
+    selectedBatchId,
+    selectedItems,
+    toolStore,
+  ]);
 
   const handleCropComplete = useCallback(
     async (itemId: string | number, completedCrop: Crop | undefined) => {
@@ -257,6 +467,18 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
           scrollViewportRef={scrollViewportRef}
           imageRefs={imageRefs}
         />
+        <div className="canvas-header__actions">
+          <button
+            type="button"
+            className="canvas-header__button"
+            onClick={() => {
+              void handleAutoDetect();
+            }}
+            disabled={selectedItems.length === 0 || isRunningAuto}
+          >
+            {isRunningAuto ? "탐지 중..." : "자동 탐지/번역"}
+          </button>
+        </div>
       </div>
 
       <div className="canvas-body">

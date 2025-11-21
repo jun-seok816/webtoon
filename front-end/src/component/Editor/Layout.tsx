@@ -19,12 +19,14 @@ import { EditorToolsStore } from "./state/EditorToolsStore";
 import { EditorCropStore } from "./state/EditorCropStore";
 import { EditorUiStore } from "./state/EditorUiStore";
 import { EditorUploadHistoryStore } from "./state/EditorUploadHistoryStore";
+import { RoboFlow } from "@jsLib/class/RoboFlow";
 
 export class Editor extends Main {
   public readonly upload: Upload;
   public readonly loading: Loading;
   public readonly loginStore: LoginModalState;
   public readonly ocrClient: OcrClient;
+  public readonly roboFlow:RoboFlow;
   public readonly translateClient: TranslateClient;
   public readonly colorPalette: ColorPalette;
   public readonly tools: EditorToolsStore;
@@ -39,6 +41,7 @@ export class Editor extends Main {
     };
     this.upload = new Upload(notify);
     this.loading = new Loading(notify, "editor");
+    this.roboFlow = new RoboFlow(notify);
     this.loginStore = new LoginModalState(notify);
     this.ocrClient = new OcrClient(notify);
     this.translateClient = new TranslateClient(notify);

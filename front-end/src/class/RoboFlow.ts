@@ -38,12 +38,16 @@ export class RoboFlow {
     try {
       const model = await window.roboflow
         .auth({
-          publishable_key: "rf_XnMrnCr89vSKw8dl1lU3HUCpLMg2",
+          publishable_key: "rf_DjqCBKEoN8QRzsslcAKNHnnnK5n2",
         })
         .load({
-          model: "text-detection-ce6gu",
-          version: 1,
+          model: "dalda-2",
+          version: 4,
         });
+      // .load({
+      //   model: "text-detection-ce6gu",
+      //   version: 1,
+      // });
       return model;
     } catch (err) {
       throw new Error("Failed to load the Roboflow model");
@@ -94,7 +98,7 @@ export class RoboFlow {
         this.iv_result = [...this.iv_result, ...predictions];
       } else {
         canvas.width = imgWidth;
-        canvas.height = splitHeight;        
+        canvas.height = splitHeight;
 
         for (let y = 0; y < imgHeight; y += splitHeight) {
           ctx.clearRect(0, 0, canvas.width, canvas.height);
