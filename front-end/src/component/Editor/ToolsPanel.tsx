@@ -8,8 +8,7 @@ interface ToolsPanelProps {
 }
 
 const tools = [
-  { id: "crop", icon: "bi-crop", label: "Crop Tool (C)" },
-  { id: "eraser", icon: "bi-eraser", label: "Eraser Tool (E)" },
+  { id: "crop", icon: "bi-crop", label: "Crop Tool (C)" },  
   { id: "text", icon: "bi-type", label: "Text Tool (T)" },
 ];
 

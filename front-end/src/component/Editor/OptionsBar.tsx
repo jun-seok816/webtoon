@@ -211,24 +211,7 @@ const OptionsBar: React.FC<OptionsBarProps> = ({ editor }) => {
         );
       default:
         return (
-          <>
-            <div className="options-group">
-              <label htmlFor="blend-mode">Mode</label>
-              <select id="blend-mode" defaultValue="normal">
-                <option value="normal">Normal</option>
-                <option value="multiply">Multiply</option>
-                <option value="screen">Screen</option>
-                <option value="overlay">Overlay</option>
-              </select>
-            </div>
-            <div className="options-group">
-              <label htmlFor="opacity">Opacity</label>
-              <input id="opacity" type="number" defaultValue={100} />
-            </div>
-            <div className="options-group">
-              <label htmlFor="flow">Flow</label>
-              <input id="flow" type="number" defaultValue={100} />
-            </div>
+          <>           
           </>
         );
     }

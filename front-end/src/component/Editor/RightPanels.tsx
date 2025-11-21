@@ -26,7 +26,7 @@ const RightPanels: React.FC<RightPanelsProps> = ({ editor }) => {
                   <li className="layer-item layer-item--empty">
                     <div className="layer-meta">
                       <span className="layer-name">
-                        ??록??Crop Overlay가 ??습??다.
+                        Crop Overlay
                       </span>
                     </div>
                   </li>
