@@ -1,4 +1,4 @@
-import React, { useState, ChangeEvent } from "react";
+import React, { ChangeEvent } from "react";
 import { Editor } from "./Layout";
 import "./RightPanels.scss";
 
@@ -19,41 +19,43 @@ const RightPanels: React.FC<RightPanelsProps> = ({ editor }) => {
     <aside className="right-panels">
       <div className="panel-content">
         <div className="panel-stack">
-          <div className="panel-section panel-section--list">       
-            <ul className="layer-list">
-              {cropLayerItems.length === 0 ? (
-                <li className="layer-item layer-item--empty">
-                  <div className="layer-meta">
-                    <span className="layer-name">
-                      Îì±Î°ùÎêú Crop OverlayÍ∞Ä ÏóÜÏäµÎãàÎã§.
-                    </span>
-                  </div>
-                </li>
-              ) : (
-                cropLayerItems.map((layer) => (
-                  <li key={layer.id} className="layer-item">
+          <div className="panel-section panel-section--list">
+            <div className="layer-list__scroll">
+              <ul className="layer-list">
+                {cropLayerItems.length === 0 ? (
+                  <li className="layer-item layer-item--empty">
                     <div className="layer-meta">
-                      <span className="layer-label">{layer.originText}</span>
-                      <textarea
-                        className="layer-name layer-name-input"
-                        value={layer.text ?? ""}
-                        onChange={handleLayerNameChange(layer.id)}
-                        rows={Math.max(
-                          1,
-                          (layer.text?.split(/\r\n|\r|\n/) ?? [""]).length
-                        )}
-                      />
+                      <span className="layer-name">
+                        ??∑œ??Crop Overlay∞° ??Ω¿??¥Ÿ.
+                      </span>
                     </div>
-                    <button
-                      onClick={() => cropStore.removeOverlay(layer.id)}
-                      title="Delete layer"
-                    >
-                      <i className="bi bi-trash" aria-hidden="true" />
-                    </button>
                   </li>
-                ))
-              )}
-            </ul>
+                ) : (
+                  cropLayerItems.map((layer) => (
+                    <li key={layer.id} className="layer-item">
+                      <div className="layer-meta">
+                        <span className="layer-label">{layer.originText}</span>
+                        <textarea
+                          className="layer-name layer-name-input"
+                          value={layer.text ?? ""}
+                          onChange={handleLayerNameChange(layer.id)}
+                          rows={Math.max(
+                            1,
+                            (layer.text?.split(/\r\n|\r|\n/) ?? [""]).length
+                          )}
+                        />
+                      </div>
+                      <button
+                        onClick={() => cropStore.removeOverlay(layer.id)}
+                        title="Delete layer"
+                      >
+                        <i className="bi bi-trash" aria-hidden="true" />
+                      </button>
+                    </li>
+                  ))
+                )}
+              </ul>
+            </div>
           </div>
         </div>
       </div>

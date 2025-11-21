@@ -14,13 +14,6 @@ const LANGUAGE_CODE_MAP: Record<string, string> = {
   chi_sim: "zh-cn",
 };
 
-const REVERSE_LANGUAGE_CODE_MAP = Object.entries(LANGUAGE_CODE_MAP).reduce<
-  Record<string, string>
->((acc, [appCode, translateCode]) => {
-  acc[translateCode] = appCode;
-  return acc;
-}, {});
-
 const mapToTranslateCode = (code?: string) => {
   if (!code) {
     return undefined;
@@ -29,13 +22,6 @@ const mapToTranslateCode = (code?: string) => {
   return LANGUAGE_CODE_MAP[normalized] ?? normalized;
 };
 
-const mapToAppCode = (code?: string) => {
-  if (!code) {
-    return undefined;
-  }
-  const normalized = code.trim().toLowerCase();
-  return REVERSE_LANGUAGE_CODE_MAP[normalized] ?? normalized;
-};
 
 const translateRouter = Router();
 

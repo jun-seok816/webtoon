@@ -4,6 +4,7 @@ import type {
   TranslateResponseBody,
   TranslateSuccessResponse,
 } from "@shared/types/translate";
+import { Main } from "./Main_class";
 
 interface TranslateClientOptions {
   baseURL?: string;
@@ -84,8 +85,9 @@ export class TranslateClient {
         this.iv_error = "알 수 없는 오류가 발생했습니다.";
         this.iv_lastResponse = null;
       }
+      Main.im_toast(this.iv_error,'error');
       throw error;
-    } finally {
+    } finally {      
       this.iv_isLoading = false;
       this.iv_forceRender?.();
     }
