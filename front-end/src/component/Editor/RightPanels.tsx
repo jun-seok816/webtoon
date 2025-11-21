@@ -19,10 +19,7 @@ const RightPanels: React.FC<RightPanelsProps> = ({ editor }) => {
     <aside className="right-panels">
       <div className="panel-content">
         <div className="panel-stack">
-          <div className="panel-section panel-section--list">
-            <div className="panel-section__header panel-section--compact">
-              <span>Layers</span>
-            </div>
+          <div className="panel-section panel-section--list">       
             <ul className="layer-list">
               {cropLayerItems.length === 0 ? (
                 <li className="layer-item layer-item--empty">
