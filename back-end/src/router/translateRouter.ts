@@ -1,5 +1,5 @@
 import { Router, Request, Response } from "express";
-import {translate} from '@vitalets/google-translate-api';
+import { translate } from "@vitalets/google-translate-api";
 import type {
   TranslateRequestBody,
   TranslateResponseBody,
@@ -22,6 +22,68 @@ const mapToTranslateCode = (code?: string) => {
   return LANGUAGE_CODE_MAP[normalized] ?? normalized;
 };
 
+type TranslateJob = {
+  text: string;
+  from?: string;
+  to: string;
+};
+
+type QueueItem = {
+  payload: TranslateJob;
+  resolve: (value: Awaited<ReturnType<typeof translate>>) => void;
+  reject: (reason?: unknown) => void;
+};
+
+const TRANSLATE_INTERVAL_MS = 600;
+const translateQueue: QueueItem[] = [];
+let isProcessingQueue = false;
+let lastInvocationTime = 0;
+
+const sleep = (ms: number) =>
+  new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+const processQueue = async () => {
+  if (isProcessingQueue) {
+    return;
+  }
+  isProcessingQueue = true;
+  try {
+    while (translateQueue.length > 0) {
+      const job = translateQueue.shift();
+      if (!job) {
+        continue;
+      }
+
+      const elapsed = Date.now() - lastInvocationTime;
+      if (elapsed < TRANSLATE_INTERVAL_MS) {
+        await sleep(TRANSLATE_INTERVAL_MS - elapsed);
+      }
+
+      try {
+        const result = await translate(job.payload.text, {
+          from: job.payload.from,
+          to: job.payload.to,
+        });
+        lastInvocationTime = Date.now();
+        job.resolve(result);
+      } catch (err) {
+        lastInvocationTime = Date.now();
+        job.reject(err);
+      }
+    }
+  } finally {
+    isProcessingQueue = false;
+    if (translateQueue.length > 0) {
+      processQueue();
+    }
+  }
+};
+
+const enqueueTranslate = (payload: TranslateJob) =>
+  new Promise<Awaited<ReturnType<typeof translate>>>((resolve, reject) => {
+    translateQueue.push({ payload, resolve, reject });
+    void processQueue();
+  });
 
 const translateRouter = Router();
 
@@ -57,7 +119,8 @@ translateRouter.post(
       const translateSource =
         mapToTranslateCode(normalizedSource) ?? normalizedSource;
 
-      const translation = await translate(text, {
+      const translation = await enqueueTranslate({
+        text,
         from: translateSource,
         to: translateTarget,
       });

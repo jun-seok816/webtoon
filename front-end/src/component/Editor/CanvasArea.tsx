@@ -472,7 +472,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
             type="button"
             className="canvas-header__button"
             onClick={() => {
-              void handleAutoDetect();
+              handleAutoDetect();
             }}
             disabled={selectedItems.length === 0 || isRunningAuto}
           >
