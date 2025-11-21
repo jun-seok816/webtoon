@@ -27,7 +27,8 @@ module.exports = merge(base, {
           <meta http-equiv="Pragma" content="no-cache">
           <meta http-equiv="Expires" content="0">
           <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">          
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">         
+          <script src="https://cdn.roboflow.com/0.2.26/roboflow.js"></script> 
           <title>toon</title>
           <base href="/">                    
         </head>      
