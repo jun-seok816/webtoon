@@ -297,24 +297,6 @@ const MenuBar: React.FC<MenuBarProps> = ({ editor }) => {
             );
           })}
         </div>
-        <div className="menu-bar__workspace">
-          <span className="workspace-label">Workspace:</span>
-          <select defaultValue="toon-compositing">
-            <option value="toon-compositing">Toon Compositing</option>
-            <option value="layout">Layout</option>
-            <option value="color">Color</option>
-          </select>
-          <button
-            className="menu-icon"
-            title="Customize workspace"
-            type="button"
-          >
-            <i className="bi bi-columns-gap" aria-hidden="true" />
-          </button>
-          <button className="menu-icon" title="Search commands" type="button">
-            <i className="bi bi-search" aria-hidden="true" />
-          </button>
-        </div>
       </nav>
       {isFileModalOpen && <FileUploadModal editor={editor} />}
       {isUploadHistoryOpen && <UploadHistoryModal editor={editor} />}

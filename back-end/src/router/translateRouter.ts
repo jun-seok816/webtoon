@@ -34,7 +34,7 @@ type QueueItem = {
   reject: (reason?: unknown) => void;
 };
 
-const TRANSLATE_INTERVAL_MS = 600;
+const TRANSLATE_INTERVAL_MS = 1200;
 const translateQueue: QueueItem[] = [];
 let isProcessingQueue = false;
 let lastInvocationTime = 0;
