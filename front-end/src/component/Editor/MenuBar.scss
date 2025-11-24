@@ -12,6 +12,10 @@
   }
 }
 
+.menu-bar__group{
+  display: flex;
+}
+
 .menu-bar__modal-backdrop {
   position: fixed;
   inset: 0;

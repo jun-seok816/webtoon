@@ -63,9 +63,7 @@ const getCropRect = (image: HTMLImageElement, crop: Crop | undefined) => {
     if (typeof value !== "number") {
       return 0;
     }
-    return unit === "%"
-      ? (value / 100) * dimension
-      : value;
+    return unit === "%" ? (value / 100) * dimension : value;
   };
 
   const cropX = valueToPixels(crop.x ?? 0, displayedWidth);
@@ -237,7 +235,7 @@ const getDisplayedCropBox = (
     x: valueToPixels(crop.x ?? 0, displayedWidth),
     y: valueToPixels(crop.y ?? 0, displayedHeight),
     width: valueToPixels(crop.width, displayedWidth),
-    height: valueToPixels(crop.height, displayedHeight),    
+    height: valueToPixels(crop.height, displayedHeight),
   };
 };
 
@@ -271,7 +269,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
     isSavingOverlays || canSaveOverlays
       ? undefined
       : typeof selectedBatchId !== "number" || selectedBatchId <= 0
-      ? "배치를 선택해주세요"
+      ? "테스트 파일은 저장불가"
       : selectedItems.length === 0
       ? ""
       : undefined;
@@ -452,7 +450,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
             id: `${itemId}-${Date.now()}-${Math.round(Math.random() * 1000)}`,
             itemId,
             ...overlayBox,
-            originText:res.text,
+            originText: res.text,
             text: "",
             backgroundColor,
             textColor,
@@ -467,7 +465,10 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
                 return;
               }
 
-              cropStore.setOverlayText(newOverlay.id, translationRes.translatedText);
+              cropStore.setOverlayText(
+                newOverlay.id,
+                translationRes.translatedText
+              );
             })
             .catch((error) => {
               console.error("[CanvasArea] 번역 결과 업데이트 실패", error);
@@ -475,10 +476,17 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
         }
       } catch (error) {
         console.error("[CanvasArea] OCR 요청 실패", error);
-    }
-  },
-  [colorPalette, cropStore, lftranslate, ocrClient, selectedBatchId, toolStore]
-);
+      }
+    },
+    [
+      colorPalette,
+      cropStore,
+      lftranslate,
+      ocrClient,
+      selectedBatchId,
+      toolStore,
+    ]
+  );
 
   const handleSaveOverlays = useCallback(async () => {
     if (!selectedBatchId || selectedBatchId <= 0) {
@@ -514,7 +522,10 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
       if (data.success) {
         Editor.im_toast("Crop overlay 저장성공", "success");
       } else {
-        Editor.im_toast(data.message ?? "Crop overlay 저장에 실패했습니다", "error");
+        Editor.im_toast(
+          data.message ?? "Crop overlay 저장에 실패했습니다",
+          "error"
+        );
       }
     } catch (error) {
       console.error("[CanvasArea] Crop overlay 저장에 실패했습니다", error);
@@ -552,17 +563,19 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
           >
             {isRunningAuto ? "탐지 중..." : "자동 탐지/번역"}
           </button>
-          <button
-            type="button"
-            className="canvas-header__button"
-            onClick={() => {
-              void handleSaveOverlays();
-            }}
-            disabled={!canSaveOverlays}
-            title={saveButtonTitle}
-          >
-            {isSavingOverlays ? "저장 중..." : "Crop 저장"}
-          </button>
+          {selectedBatchId !== -1 && (
+            <button
+              type="button"
+              className="canvas-header__button"
+              onClick={() => {
+                void handleSaveOverlays();
+              }}
+              disabled={!canSaveOverlays}
+              title={saveButtonTitle}
+            >
+              {isSavingOverlays ? "저장 중..." : "Crop 저장"}
+            </button>
+          )}
         </div>
       </div>
 
@@ -578,7 +591,10 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
                 ) : (
                   <div className="scroll-viewer__image-stack">
                     {selectedItems.map((item) => (
-                      <div className="scroll-viewer__image-wrapper" key={item.id}>
+                      <div
+                        className="scroll-viewer__image-wrapper"
+                        key={item.id}
+                      >
                         <ReactCrop
                           crop={crop}
                           className="scroll-viewer__crop"
