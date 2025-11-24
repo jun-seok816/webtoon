@@ -43,9 +43,7 @@ export class EditorCropStore {
       ...box,
       opacity: this.normalizeOpacity(box.opacity),
     };
-    this.commitBoxes([...this.cropBoxes, normalizedOverlay], {
-      recordHistory: false,
-    });
+    this.commitBoxes([...this.cropBoxes, normalizedOverlay]);
   }
 
   public setOverlayText(id: string, text: string) {
