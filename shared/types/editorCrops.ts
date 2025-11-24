@@ -1,4 +1,4 @@
-export interface CropOverlayDto {
+export interface CropOverlayBox {
   id: string;
   itemId: string | number;
   x: number;
@@ -14,7 +14,7 @@ export interface CropOverlayDto {
 
 export interface SaveCropOverlaysRequest {
   batchId: number;
-  overlays: CropOverlayDto[];
+  overlays: CropOverlayBox[];
 }
 
 export interface SaveCropOverlaysSuccessResponse {
@@ -30,3 +30,17 @@ export interface SaveCropOverlaysErrorResponse {
 export type SaveCropOverlaysResponse =
   | SaveCropOverlaysSuccessResponse
   | SaveCropOverlaysErrorResponse;
+
+export interface GetCropOverlaysSuccessResponse {
+  success: true;
+  overlays: CropOverlayBox[];
+}
+
+export interface GetCropOverlaysErrorResponse {
+  success: false;
+  message: string;
+}
+
+export type GetCropOverlaysResponse =
+  | GetCropOverlaysSuccessResponse
+  | GetCropOverlaysErrorResponse;

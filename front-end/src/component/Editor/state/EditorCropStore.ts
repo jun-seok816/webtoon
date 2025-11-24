@@ -1,4 +1,4 @@
-import type { CropOverlayBox } from "../CropOverlayTypes";
+import { CropOverlayBox } from "@shared/types/editorCrops";
 
 type Notify = () => void;
 
@@ -36,6 +36,11 @@ export class EditorCropStore {
 
   public get canRedo() {
     return this.cropHistoryIndex < this.cropHistory.length - 1;
+  }
+
+  public initOverlay(boxs:CropOverlayBox[]){
+    this.cropBoxes = boxs;
+    this.notify();
   }
 
   public addOverlay(box: CropOverlayBox) {

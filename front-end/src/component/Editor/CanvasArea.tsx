@@ -17,8 +17,8 @@ import {
   TranslateResponseBody,
 } from "@shared/types/translate";
 import { CropOverlayLayer } from "./CropOverlayLayer";
-import type { CropOverlayBox } from "./CropOverlayTypes";
 import type {
+  CropOverlayBox,
   SaveCropOverlaysErrorResponse,
   SaveCropOverlaysRequest,
   SaveCropOverlaysResponse,

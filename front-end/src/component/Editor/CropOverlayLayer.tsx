@@ -7,7 +7,7 @@ import React, {
 } from "react";
 import Moveable, { type OnDrag, type OnDragEnd } from "react-moveable";
 import type { Editor } from "./Layout";
-import type { CropOverlayBox } from "./CropOverlayTypes";
+import { CropOverlayBox } from "@shared/types/editorCrops";
 
 const hexToRgba = (hex: string, alpha: number) => {
   const normalized = hex.replace("#", "");

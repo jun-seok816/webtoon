@@ -1,12 +1,27 @@
 import { Router, Request, Response } from "express";
 import { OkPacket, RowDataPacket } from "mysql2/promise";
 import type {
+  GetCropOverlaysResponse,
   SaveCropOverlaysRequest,
   SaveCropOverlaysResponse,
 } from "../../../shared/types/editorCrops";
 
 type BatchOwnerRow = RowDataPacket & {
   id: number;
+};
+
+type CropOverlayRow = RowDataPacket & {
+  overlay_uuid: string;
+  item_id: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  text: string;
+  origin_text: string;
+  background_color: string;
+  text_color: string;
+  opacity: number | null;
 };
 
 const editorCropRouter = Router();
@@ -43,6 +58,98 @@ const isValidOverlayPayload = (
     typeof overlay.textColor === "string"
   );
 };
+
+editorCropRouter.get(
+  "/:batchId",
+  async (
+    req: Request<{ batchId: string }, GetCropOverlaysResponse>,
+    res: Response<GetCropOverlaysResponse>
+  ) => {
+    try {
+      const userId = req.session?.userId;
+      if (!userId) {
+        res.status(401).json({
+          success: false,
+          message: "세션 만료",
+        });
+        return;
+      }
+
+      const batchId = Number(req.params.batchId);
+      if (!Number.isInteger(batchId) || batchId <= 0) {
+        res.status(400).json({
+          success: false,
+          message: "유효하지 않은 batchId 입니다.",
+        });
+        return;
+      }
+
+      const [batchRows] = await process._myApp.db
+        .promise()
+        .query<BatchOwnerRow[]>(
+          `SELECT id
+           FROM upload_batches
+           WHERE id = ? AND user_id = ?
+           LIMIT 1`,
+          [batchId, userId]
+        );
+
+      if (batchRows.length === 0) {
+        res.status(404).json({
+          success: false,
+          message: "배치를 찾을 수 없습니다.",
+        });
+        return;
+      }
+
+      const [rows] = await process._myApp.db
+        .promise()
+        .query<CropOverlayRow[]>(
+          `SELECT
+            overlay_uuid,
+            item_id,
+            x,
+            y,
+            width,
+            height,
+            text,
+            origin_text,
+            background_color,
+            text_color,
+            opacity
+           FROM editor_crop_overlays
+           WHERE batch_id = ?
+           ORDER BY item_id ASC, overlay_uuid ASC`,
+          [batchId]
+        );
+
+      const overlays = rows.map((row) => ({
+        id: row.overlay_uuid,
+        itemId: row.item_id,
+        x: row.x,
+        y: row.y,
+        width: row.width,
+        height: row.height,
+        text: row.text,
+        originText: row.origin_text,
+        backgroundColor: row.background_color,
+        textColor: row.text_color,
+        opacity: typeof row.opacity === "number" ? row.opacity : undefined,
+      }));
+
+      res.json({
+        success: true,
+        overlays,
+      });
+    } catch (error) {
+      console.error("[editorCrop] 불러오기 실패", error);
+      res.status(500).json({
+        success: false,
+        message: "Crop overlay 조회 중 오류가 발생했습니다.",
+      });
+    }
+  }
+);
 
 editorCropRouter.post(
   "/",

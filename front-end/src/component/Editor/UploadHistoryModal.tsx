@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import axios from "axios";
 import type { UploadBatchDto } from "@shared/types/uploads";
 import { Editor } from "./Layout";
+import { GetCropOverlaysResponse } from "@shared/types/editorCrops";
 
 type UploadHistoryModalProps = {
   editor: Editor;
@@ -139,16 +140,32 @@ const UploadHistoryModal: React.FC<UploadHistoryModalProps> = ({ editor }) => {
     (batch: UploadBatchDto) => {
       handleClose();
       uploadHistory.setCurrentBatch(batch);
+      callInitOverlay(batch);
     },
     [handleClose, uploadHistory]
   );
 
+  const callInitOverlay = useCallback(async (batch: UploadBatchDto) => {
+    try {
+      const { data: overlaysData } = await axios.get<GetCropOverlaysResponse>(
+        `/api/editor/crops/${batch.id}`
+      );
+      if (overlaysData.success) {
+        editor.crops.clear({ skipHistory: true, resetHistory: true });
+        editor.crops.initOverlay(overlaysData.overlays);
+      }
+    } catch (overlayError) {
+      console.error("[UploadHistory] overlay 불러오기 실패", overlayError);
+    }
+  }, []);
+
   const handleBatchKeyDown = useCallback(
-    (event: React.KeyboardEvent<HTMLElement>, batch: UploadBatchDto) => {
+    async (event: React.KeyboardEvent<HTMLElement>, batch: UploadBatchDto) => {
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
         handleClose();
         uploadHistory.setCurrentBatch(batch);
+        callInitOverlay(batch);
       }
     },
     [handleClose, uploadHistory]
