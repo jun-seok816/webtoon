@@ -132,6 +132,8 @@ const CropOverlay: React.FC<CropOverlayProps> = ({ box, editor }) => {
       <div
         ref={handleRef}
         className="crop-overlay"
+        data-overlay-id={box.id}
+        data-item-id={box.itemId}
         style={{
           pointerEvents: "auto",
           top: `${box.y}px`,
