@@ -1,3 +1,4 @@
+import axios from "axios";
 import React, {
   useCallback,
   useEffect,
@@ -17,6 +18,12 @@ import {
 } from "@shared/types/translate";
 import { CropOverlayLayer } from "./CropOverlayLayer";
 import type { CropOverlayBox } from "./CropOverlayTypes";
+import type {
+  SaveCropOverlaysErrorResponse,
+  SaveCropOverlaysRequest,
+  SaveCropOverlaysResponse,
+  SaveCropOverlaysSuccessResponse,
+} from "@shared/types/editorCrops";
 
 interface CanvasAreaProps {
   editor: Editor;
@@ -252,8 +259,22 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
   const [crop, setCrop] = useState<Crop | undefined>(undefined);
   const cropBoxes = cropStore.boxes;
   const [isAutoProcessing, setIsAutoProcessing] = useState(false);
+  const [isSavingOverlays, setIsSavingOverlays] = useState(false);
   const isAutoDetecting = roboFlow?.pt_loading ?? false;
   const isRunningAuto = isAutoDetecting || isAutoProcessing;
+  const canSaveOverlays =
+    typeof selectedBatchId === "number" &&
+    selectedBatchId > 0 &&
+    selectedItems.length > 0 &&
+    !isSavingOverlays;
+  const saveButtonTitle =
+    isSavingOverlays || canSaveOverlays
+      ? undefined
+      : typeof selectedBatchId !== "number" || selectedBatchId <= 0
+      ? "배치를 선택해주세요"
+      : selectedItems.length === 0
+      ? ""
+      : undefined;
 
   useEffect(() => {
     cropStore.clear({ skipHistory: true, resetHistory: true });
@@ -454,10 +475,63 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
         }
       } catch (error) {
         console.error("[CanvasArea] OCR 요청 실패", error);
+    }
+  },
+  [colorPalette, cropStore, lftranslate, ocrClient, selectedBatchId, toolStore]
+);
+
+  const handleSaveOverlays = useCallback(async () => {
+    if (!selectedBatchId || selectedBatchId <= 0) {
+      Editor.im_toast("선택된 배치파일 없음", "warn");
+      return;
+    }
+
+    setIsSavingOverlays(true);
+    try {
+      const payload: SaveCropOverlaysRequest = {
+        batchId: selectedBatchId,
+        overlays: cropBoxes.map((box) => ({
+          id: box.id,
+          itemId: box.itemId,
+          x: box.x,
+          y: box.y,
+          width: box.width,
+          height: box.height,
+          text: box.text,
+          originText: box.originText,
+          backgroundColor: box.backgroundColor,
+          textColor: box.textColor,
+          opacity:
+            typeof box.opacity === "number" ? box.opacity : cropStore.opacity,
+        })),
+      };
+
+      const { data } = await axios.post<SaveCropOverlaysResponse>(
+        "/api/editor/crops",
+        payload
+      );
+
+      if (data.success) {
+        Editor.im_toast("Crop overlay 저장성공", "success");
+      } else {
+        Editor.im_toast(data.message ?? "Crop overlay 저장에 실패했습니다", "error");
       }
-    },
-    [colorPalette, cropStore, lftranslate, ocrClient, selectedBatchId, toolStore]
-  );
+    } catch (error) {
+      console.error("[CanvasArea] Crop overlay 저장에 실패했습니다", error);
+      if (axios.isAxiosError(error)) {
+        const responseData = error.response?.data as
+          | SaveCropOverlaysErrorResponse
+          | undefined;
+        const message =
+          responseData?.message ?? "Crop overlay 저장에 실패했습니다";
+        Editor.im_toast(message, "error");
+      } else {
+        Editor.im_toast("Crop overlay 저장에 실패했습니다", "error");
+      }
+    } finally {
+      setIsSavingOverlays(false);
+    }
+  }, [cropBoxes, cropStore, selectedBatchId]);
 
   return (
     <section className="canvas-area">
@@ -477,6 +551,17 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
             disabled={selectedItems.length === 0 || isRunningAuto}
           >
             {isRunningAuto ? "탐지 중..." : "자동 탐지/번역"}
+          </button>
+          <button
+            type="button"
+            className="canvas-header__button"
+            onClick={() => {
+              void handleSaveOverlays();
+            }}
+            disabled={!canSaveOverlays}
+            title={saveButtonTitle}
+          >
+            {isSavingOverlays ? "저장 중..." : "Crop 저장"}
           </button>
         </div>
       </div>

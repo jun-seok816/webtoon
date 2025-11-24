@@ -1,0 +1,178 @@
+import { Router, Request, Response } from "express";
+import { OkPacket, RowDataPacket } from "mysql2/promise";
+import type {
+  SaveCropOverlaysRequest,
+  SaveCropOverlaysResponse,
+} from "../../../shared/types/editorCrops";
+
+type BatchOwnerRow = RowDataPacket & {
+  id: number;
+};
+
+const editorCropRouter = Router();
+
+editorCropRouter.use((req, res, next) =>
+  process._myApp.checkSession(req, res, next)
+);
+
+type OverlayPayload = SaveCropOverlaysRequest["overlays"][number];
+
+const normalizeOpacity = (value: unknown) => {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return Math.max(0, Math.min(100, Math.round(value)));
+  }
+  return 100;
+};
+
+const isValidOverlayPayload = (
+  overlay: OverlayPayload | undefined
+): overlay is OverlayPayload => {
+  if (!overlay || typeof overlay !== "object") {
+    return false;
+  }
+  return (
+    typeof overlay.id === "string" &&
+    (typeof overlay.itemId === "string" || typeof overlay.itemId === "number") &&
+    typeof overlay.x === "number" &&
+    typeof overlay.y === "number" &&
+    typeof overlay.width === "number" &&
+    typeof overlay.height === "number" &&
+    typeof overlay.text === "string" &&
+    typeof overlay.originText === "string" &&
+    typeof overlay.backgroundColor === "string" &&
+    typeof overlay.textColor === "string"
+  );
+};
+
+editorCropRouter.post(
+  "/",
+  async (
+    req: Request<unknown, SaveCropOverlaysResponse, SaveCropOverlaysRequest>,
+    res: Response<SaveCropOverlaysResponse>
+  ) => {
+    try {
+      const userId = req.session?.userId;
+      if (!userId) {
+        res.status(401).json({
+          success: false,
+          message: "세션 만료",
+        });
+        return;
+      }
+
+      const { batchId, overlays } = req.body ?? {};
+      if (!batchId || typeof batchId !== "number" || batchId <= 0) {
+        res.status(400).json({
+          success: false,
+          message: "유효 ID가 아님.",
+        });
+        return;
+      }
+
+      if (!Array.isArray(overlays)) {
+        res.status(400).json({
+          success: false,
+          message: "Crop overlay 배열 아님.",
+        });
+        return;
+      }
+
+      if (!overlays.every((overlay) => isValidOverlayPayload(overlay))) {
+        res.status(400).json({
+          success: false,
+          message: "overlay 타입 불일치.",
+        });
+        return;
+      }
+
+      const [batchRows] = await process._myApp.db
+        .promise()
+        .query<BatchOwnerRow[]>(
+          `SELECT id
+           FROM upload_batches
+           WHERE id = ? AND user_id = ?
+           LIMIT 1`,
+          [batchId, userId]
+        );
+
+      if (batchRows.length === 0) {
+        res.status(404).json({
+          success: false,
+          message: "배치를 찾을 수 없습니다.",
+        });
+        return;
+      }
+
+      const connection = await process._myApp.db.promise().getConnection();
+
+      try {
+        await connection.beginTransaction();
+        await connection.query("DELETE FROM editor_crop_overlays WHERE batch_id = ?", [
+          batchId,
+        ]);
+
+        let insertedCount = 0;
+
+        if (overlays.length > 0) {
+          const values = overlays.map((overlay) => [
+            batchId,
+            overlay.id,
+            String(overlay.itemId),
+            overlay.x,
+            overlay.y,
+            overlay.width,
+            overlay.height,
+            overlay.text,
+            overlay.originText,
+            overlay.backgroundColor,
+            overlay.textColor,
+            normalizeOpacity(overlay.opacity),
+          ]);
+
+          const [result] = await connection.query<OkPacket>(
+            `INSERT INTO editor_crop_overlays (
+              batch_id,
+              overlay_uuid,
+              item_id,
+              x,
+              y,
+              width,
+              height,
+              text,
+              origin_text,
+              background_color,
+              text_color,
+              opacity
+            ) VALUES ?`,
+            [values]
+          );
+          insertedCount = result.affectedRows;
+        }
+
+        await connection.commit();
+
+        res.json({
+          success: true,
+          insertedCount,
+        });
+      } catch (error) {
+        await connection.rollback();
+        console.error("[editorCrop] 저장 실패", error);
+        res.status(500).json({
+          success: false,
+          message: "Crop overlay 오류가 발생했습니다",
+        });
+      } finally {
+        connection.release();
+      }
+    } catch (error) {
+      console.error("[editorCrop] 처리 오류", error);
+      res.status(500).json({
+        success: false,
+        message: "Crop overlay 요청 처리 실패",
+      });
+    }
+  }
+);
+
+export default editorCropRouter;

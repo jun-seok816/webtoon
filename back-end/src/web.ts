@@ -12,6 +12,7 @@ import loginRouter from "./router/loginRouter";
 import fileRouter from "./router/fileRouter";
 import ocrRouter from "./router/ocrRouter";
 import translateRouter from "./router/translateRouter";
+import editorCropRouter from "./router/editorCropRouter";
 import Db from "./db";
 
 // .env 파일에서 환경 변수 로드
@@ -108,6 +109,7 @@ app.use("/api/uploads", uploadRouter);
 app.use("/api/login", loginRouter);
 app.use("/api/ocr", ocrRouter);
 app.use("/api/translate", translateRouter);
+app.use("/api/editor/crops", editorCropRouter);
 
 // ② React 번들의 정적 파일
 app.use(
