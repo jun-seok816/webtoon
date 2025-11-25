@@ -9,7 +9,7 @@ interface ToolsPanelProps {
 
 const tools = [
   { id: "crop", icon: "bi-crop", label: "Crop Tool (C)" },  
-  { id: "text", icon: "bi-type", label: "Text Tool (T)" },
+  // { id: "text", icon: "bi-type", label: "Text Tool (T)" },
 ];
 
 const ToolsPanel: React.FC<ToolsPanelProps> = ({ editor }) => {
