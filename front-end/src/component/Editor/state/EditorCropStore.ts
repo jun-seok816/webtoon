@@ -1,4 +1,5 @@
 import { CropOverlayBox } from "@shared/types/editorCrops";
+import { EditorToolsStore } from "./EditorToolsStore";
 
 type Notify = () => void;
 
@@ -7,7 +8,7 @@ export class EditorCropStore {
   private cropHistory: CropOverlayBox[][] = [];
   private cropHistoryIndex = 0;
   private readonly cropHistoryLimit = 50;
-  private cropOpacityValue = 100;
+
 
   constructor(private readonly notify: Notify) {
     this.initializeHistory();
@@ -17,18 +18,6 @@ export class EditorCropStore {
     return this.cropBoxes;
   }
 
-  public get opacity() {
-    return this.cropOpacityValue;
-  }
-
-  public setOpacity(nextOpacity: number) {
-    const clamped = this.normalizeOpacity(nextOpacity, 0);
-    if (this.cropOpacityValue === clamped) {
-      return;
-    }
-    this.cropOpacityValue = clamped;
-    this.notify();
-  }
 
   public get canUndo() {
     return this.cropHistoryIndex > 0;
@@ -46,7 +35,7 @@ export class EditorCropStore {
   public addOverlay(box: CropOverlayBox) {
     const normalizedOverlay: CropOverlayBox = {
       ...box,
-      opacity: this.normalizeOpacity(box.opacity),
+      opacity: EditorToolsStore.normalizeOpacity(box.opacity),
     };
     this.commitBoxes([...this.cropBoxes, normalizedOverlay]);
   }
@@ -127,12 +116,7 @@ export class EditorCropStore {
     this.commitBoxes(this.cloneBoxes(snapshot), { recordHistory: false });
   }
 
-  private normalizeOpacity(value?: number, fallback?: number) {
-    const base = typeof fallback === "number" ? fallback : this.cropOpacityValue;
-    const numeric =
-      typeof value === "number" && Number.isFinite(value) ? value : base;
-    return Math.max(0, Math.min(100, Math.round(numeric)));
-  }
+
 
   private normalizeNumericValue(value: number | undefined, fallback: number) {
     return typeof value === "number" && Number.isFinite(value) ? value : fallback;

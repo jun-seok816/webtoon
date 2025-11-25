@@ -7,11 +7,31 @@ export class EditorToolsStore {
   private originalLanguage: AppLanguageCode = "kor";
   private translatedLanguage: AppLanguageCode = "eng";
   private zoomValue = 100;
+  private cropOpacityValue = 100;
 
   constructor(private readonly notify: Notify) {}
 
   public get activeTool() {
     return this.activeToolValue;
+  }
+
+  public get opacity() {
+    return this.cropOpacityValue;
+  }
+
+  public setOpacity(nextOpacity: number) {
+    const clamped = EditorToolsStore.normalizeOpacity(nextOpacity);
+    if (this.cropOpacityValue === clamped) {
+      return;
+    }
+    this.cropOpacityValue = clamped;
+    this.notify();
+  }
+
+  static normalizeOpacity(value?: number) {
+    const numeric =
+      typeof value === "number" && Number.isFinite(value) ? value : 0;
+    return Math.max(0, Math.min(100, Math.round(numeric)));
   }
 
   public setActiveTool(tool: string) {

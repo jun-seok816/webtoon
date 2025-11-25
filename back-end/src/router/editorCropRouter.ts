@@ -30,33 +30,11 @@ editorCropRouter.use((req, res, next) =>
   process._myApp.checkSession(req, res, next)
 );
 
-type OverlayPayload = SaveCropOverlaysRequest["overlays"][number];
-
 const normalizeOpacity = (value: unknown) => {
   if (typeof value === "number" && Number.isFinite(value)) {
     return Math.max(0, Math.min(100, Math.round(value)));
   }
   return 100;
-};
-
-const isValidOverlayPayload = (
-  overlay: OverlayPayload | undefined
-): overlay is OverlayPayload => {
-  if (!overlay || typeof overlay !== "object") {
-    return false;
-  }
-  return (
-    typeof overlay.id === "string" &&
-    (typeof overlay.itemId === "string" || typeof overlay.itemId === "number") &&
-    typeof overlay.x === "number" &&
-    typeof overlay.y === "number" &&
-    typeof overlay.width === "number" &&
-    typeof overlay.height === "number" &&
-    typeof overlay.text === "string" &&
-    typeof overlay.originText === "string" &&
-    typeof overlay.backgroundColor === "string" &&
-    typeof overlay.textColor === "string"
-  );
 };
 
 editorCropRouter.get(
@@ -102,10 +80,8 @@ editorCropRouter.get(
         return;
       }
 
-      const [rows] = await process._myApp.db
-        .promise()
-        .query<CropOverlayRow[]>(
-          `SELECT
+      const [rows] = await process._myApp.db.promise().query<CropOverlayRow[]>(
+        `SELECT
             overlay_uuid,
             item_id,
             x,
@@ -120,8 +96,8 @@ editorCropRouter.get(
            FROM editor_crop_overlays
            WHERE batch_id = ?
            ORDER BY item_id ASC, overlay_uuid ASC`,
-          [batchId]
-        );
+        [batchId]
+      );
 
       const overlays = rows.map((row) => ({
         id: row.overlay_uuid,
@@ -184,14 +160,6 @@ editorCropRouter.post(
         return;
       }
 
-      if (!overlays.every((overlay) => isValidOverlayPayload(overlay))) {
-        res.status(400).json({
-          success: false,
-          message: "overlay 타입 불일치.",
-        });
-        return;
-      }
-
       const [batchRows] = await process._myApp.db
         .promise()
         .query<BatchOwnerRow[]>(
@@ -214,9 +182,10 @@ editorCropRouter.post(
 
       try {
         await connection.beginTransaction();
-        await connection.query("DELETE FROM editor_crop_overlays WHERE batch_id = ?", [
-          batchId,
-        ]);
+        await connection.query(
+          "DELETE FROM editor_crop_overlays WHERE batch_id = ?",
+          [batchId]
+        );
 
         let insertedCount = 0;
 

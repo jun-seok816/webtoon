@@ -21,7 +21,7 @@ const OptionsBar: React.FC<OptionsBarProps> = ({ editor }) => {
   const canUndo = cropStore.canUndo;
   const canRedo = cropStore.canRedo;
   const [openPicker, setOpenPicker] = useState<EditorColorKey | null>(null);
-  const cropOpacity = cropStore.opacity;
+  const cropOpacity = toolStore.opacity;
   const [cropOpacityInput, setCropOpacityInput] = useState(() =>
     cropOpacity.toString()
   );
@@ -45,11 +45,11 @@ const OptionsBar: React.FC<OptionsBarProps> = ({ editor }) => {
   const applyCropOpacityValue = useCallback(
     (value: string) => {
       if (value.trim() === "") {
-        cropStore.setOpacity(0);
+        toolStore.setOpacity(0);
         return;
       }
       const numeric = Number(value);
-      cropStore.setOpacity(Number.isFinite(numeric) ? numeric : 0);
+      toolStore.setOpacity(Number.isFinite(numeric) ? numeric : 0);
     },
     [cropStore]
   );

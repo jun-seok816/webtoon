@@ -264,6 +264,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
     typeof selectedBatchId === "number" &&
     selectedBatchId > 0 &&
     selectedItems.length > 0 &&
+    (cropStore.canRedo || cropStore.canUndo)&&
     !isSavingOverlays;
   const saveButtonTitle =
     isSavingOverlays || canSaveOverlays
@@ -310,7 +311,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
     try {
       const backgroundColor = colorPalette.pt_primaryColor;
       const textColor = colorPalette.pt_secondaryColor;
-      const editorOpacity = cropStore.opacity;
+      const editorOpacity = toolStore.opacity;
 
       for (const [index, item] of selectedItems.entries()) {
         const imageElement = imageRefs.current.get(item.id);
@@ -445,7 +446,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
         if (res.success && overlayBox) {
           const backgroundColor = colorPalette.pt_primaryColor;
           const textColor = colorPalette.pt_secondaryColor;
-          const editorOpacity = cropStore.opacity;
+          const editorOpacity = toolStore.opacity;
           const newOverlay: CropOverlayBox = {
             id: `${itemId}-${Date.now()}-${Math.round(Math.random() * 1000)}`,
             itemId,
@@ -510,7 +511,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
           backgroundColor: box.backgroundColor,
           textColor: box.textColor,
           opacity:
-            typeof box.opacity === "number" ? box.opacity : cropStore.opacity,
+            typeof box.opacity === "number" ? box.opacity : toolStore.opacity,
         })),
       };
 
@@ -521,6 +522,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
 
       if (data.success) {
         Editor.im_toast("Crop overlay 저장성공", "success");
+        cropStore.clear({skipHistory:true,resetHistory:true});
       } else {
         Editor.im_toast(
           data.message ?? "Crop overlay 저장에 실패했습니다",
