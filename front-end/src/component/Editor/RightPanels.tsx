@@ -71,6 +71,7 @@ const RightPanels: React.FC<RightPanelsProps> = ({ editor }) => {
                     <li
                       key={layer.id}
                       className="layer-item"
+                      style={layer.id === cropStore.selectBox?.id?{"borderBottom":"1px solid white"}:{}}
                       onClick={() => scrollOverlayIntoView(layer.id)}
                     >
                       <div className="layer-meta">
