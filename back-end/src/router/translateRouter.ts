@@ -34,7 +34,7 @@ type QueueItem = {
   reject: (reason?: unknown) => void;
 };
 
-const TRANSLATE_INTERVAL_MS = 2200;
+const TRANSLATE_INTERVAL_MS = 15000;
 const translateQueue: QueueItem[] = [];
 let isProcessingQueue = false;
 let lastInvocationTime = 0;
@@ -150,7 +150,7 @@ translateRouter.post(
         message:
           status === 400
             ? "지원하지 않는 언어 코드입니다."
-            : "번역 처리 중 오류가 발생했습니다.",
+            : "요청 과다로 인한 IP 차단",
         code,
       });
     }
