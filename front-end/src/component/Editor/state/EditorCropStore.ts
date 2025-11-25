@@ -8,6 +8,7 @@ export class EditorCropStore {
   private cropHistory: CropOverlayBox[][] = [];
   private cropHistoryIndex = 0;
   private readonly cropHistoryLimit = 50;
+  private sBox:CropOverlayBox|undefined;
 
 
   constructor(private readonly notify: Notify) {
@@ -18,6 +19,25 @@ export class EditorCropStore {
     return this.cropBoxes;
   }
 
+  public get selectBox(){
+    return this.sBox;
+  }
+
+  public setSelectBox(id?: string) {
+    if (!id) {
+      this.sBox = undefined;
+      this.notify();
+      return;
+    }
+    const selected = this.cropBoxes.find((box) => box.id === id);
+    this.sBox = selected;
+    this.notify();
+  }
+
+  public setInintSelectBox(){
+    this.sBox = undefined;
+    this.notify();
+  }
 
   public get canUndo() {
     return this.cropHistoryIndex > 0;
@@ -84,6 +104,27 @@ export class EditorCropStore {
       return;
     }
     this.commitBoxes(nextBoxes);
+  }
+
+  public setSelectedOverlayOpacity(opacity: number) {
+    if (!this.sBox) {
+      return;
+    }
+    const normalizedOpacity = EditorToolsStore.normalizeOpacity(opacity);
+    let updated = false;
+    const nextBoxes = this.cropBoxes.map((box) => {
+      if (box.id !== this.sBox?.id) {
+        return box;
+      }
+      if (box.opacity === normalizedOpacity) {
+        return box;
+      }
+      updated = true;
+      return { ...box, opacity: normalizedOpacity };
+    });
+    if (updated) {
+      this.commitBoxes(nextBoxes);
+    }
   }
 
   public clear(options: { skipHistory?: boolean; resetHistory?: boolean } = {}) {

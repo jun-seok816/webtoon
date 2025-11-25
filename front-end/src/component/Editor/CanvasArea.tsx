@@ -264,7 +264,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
     typeof selectedBatchId === "number" &&
     selectedBatchId > 0 &&
     selectedItems.length > 0 &&
-    (cropStore.canRedo || cropStore.canUndo)&&
+    (cropStore.canRedo || cropStore.canUndo) &&
     !isSavingOverlays;
   const saveButtonTitle =
     isSavingOverlays || canSaveOverlays
@@ -522,7 +522,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
 
       if (data.success) {
         Editor.im_toast("Crop overlay 저장성공", "success");
-        cropStore.clear({skipHistory:true,resetHistory:true});
+        cropStore.clear({ skipHistory: true, resetHistory: true });
       } else {
         Editor.im_toast(
           data.message ?? "Crop overlay 저장에 실패했습니다",
@@ -545,6 +545,21 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
       setIsSavingOverlays(false);
     }
   }, [cropBoxes, cropStore, selectedBatchId]);
+
+  const ref = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const box = ref.current ?? document.body;
+
+    const handleClick = () => {
+      editor.crops.setInintSelectBox();
+    };
+
+    box.addEventListener("click", handleClick);
+
+    return () => {
+      box.removeEventListener("click", handleClick); // cleanup
+    };
+  }, []);
 
   return (
     <section className="canvas-area">
@@ -581,7 +596,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
         </div>
       </div>
 
-      <div className="canvas-body">
+      <div className="canvas-body" ref={ref}>
         <div className="canvas-wrapper">
           <div className="scroll-viewer">
             <div className="scroll-viewer__frame">

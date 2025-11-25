@@ -150,7 +150,7 @@ translateRouter.post(
         message:
           status === 400
             ? "지원하지 않는 언어 코드입니다."
-            : "요청 과다로 인한 IP 차단",
+            : "요청 과다로 인한 IP 차단, 번역API 호출 실패",
         code,
       });
     }

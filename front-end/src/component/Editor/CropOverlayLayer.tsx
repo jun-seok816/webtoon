@@ -5,7 +5,11 @@ import React, {
   useRef,
   useState,
 } from "react";
-import Moveable, { type OnDrag, type OnDragEnd } from "react-moveable";
+import Moveable, {
+  type OnClick,
+  type OnDrag,
+  type OnDragEnd,
+} from "react-moveable";
 import type { Editor } from "./Layout";
 import { CropOverlayBox } from "@shared/types/editorCrops";
 
@@ -60,6 +64,7 @@ interface CropOverlayProps {
 
 const CropOverlay: React.FC<CropOverlayProps> = ({ box, editor }) => {
   const cropStore = editor.crops;
+  const toolStore = editor.tools;
   const [target, setTarget] = useState<HTMLDivElement | null>(null);
   const handleRef = useCallback((node: HTMLDivElement | null) => {
     setTarget(node);
@@ -133,6 +138,10 @@ const CropOverlay: React.FC<CropOverlayProps> = ({ box, editor }) => {
         ref={handleRef}
         className="crop-overlay"
         data-overlay-id={box.id}
+        onClick={(e) => {
+          e.stopPropagation();          
+          cropStore.setSelectBox(box.id);
+        }}
         data-item-id={box.itemId}
         style={{
           pointerEvents: "auto",
@@ -145,7 +154,9 @@ const CropOverlay: React.FC<CropOverlayProps> = ({ box, editor }) => {
             box.backgroundColor ?? "#ffffff",
             percentToOpacity(box.opacity ?? 100)
           ),
-          borderColor: box.backgroundColor,
+          border: `${
+            cropStore.selectBox?.id === box.id ? " 3px dotted #5b72f245" : ""
+          }`,
         }}
       >
         {box.text && (
@@ -159,7 +170,7 @@ const CropOverlay: React.FC<CropOverlayProps> = ({ box, editor }) => {
           target={target}
           draggable
           resizable={false}
-          scalable={false}
+          scalable={true}
           rotatable={false}
           pinchable={false}
           edgeDraggable={false}

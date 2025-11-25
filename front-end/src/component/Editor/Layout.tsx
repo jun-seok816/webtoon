@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import MenuBar from "./MenuBar";
 import ToolsPanel from "./ToolsPanel";
 import OptionsBar from "./OptionsBar";
@@ -26,7 +26,7 @@ export class Editor extends Main {
   public readonly loading: Loading;
   public readonly loginStore: LoginModalState;
   public readonly ocrClient: OcrClient;
-  public readonly roboFlow:RoboFlow;
+  public readonly roboFlow: RoboFlow;
   public readonly translateClient: TranslateClient;
   public readonly colorPalette: ColorPalette;
   public readonly tools: EditorToolsStore;
@@ -65,6 +65,7 @@ const Layout: React.FC = () => {
     }
   });
 
+
   return (
     <div className="app-layout">
       <TitleBar editor={editor} />
@@ -72,7 +73,7 @@ const Layout: React.FC = () => {
       <OptionsBar editor={editor} />
       <ToolsPanel editor={editor} />
       <CanvasArea editor={editor} />
-      <RightPanels editor={editor} />      
+      <RightPanels editor={editor} />
     </div>
   );
 };

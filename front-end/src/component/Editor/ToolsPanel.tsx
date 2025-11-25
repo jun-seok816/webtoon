@@ -18,8 +18,7 @@ const ToolsPanel: React.FC<ToolsPanelProps> = ({ editor }) => {
   const navigate = useNavigate();
   const loginStore = editor.loginStore;
   const session = loginStore.pt_session;
-  const isLoggingOut = loginStore.pt_isLoggingOut;
-  const isLoggedIn = session?.loggedIn ?? false;
+  const isLoggingOut = loginStore.pt_isLoggingOut;  
 
   useEffect(() => {
     if (loginStore.pt_session == null) {

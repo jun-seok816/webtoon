@@ -74,7 +74,13 @@ const OptionsBar: React.FC<OptionsBarProps> = ({ editor }) => {
 
   const applyColor = useCallback(
     (key: EditorColorKey, color: ColorResult, closeAfter: boolean) => {
+      if (cropStore.selectBox) {
+        cropStore.selectBox[
+          key === "primary" ? "backgroundColor" : "textColor"
+        ] = color.hex;
+      }
       colorPalette.im_setColor(key, color.hex);
+
       if (closeAfter) {
         setOpenPicker(null);
       }
@@ -171,13 +177,17 @@ const OptionsBar: React.FC<OptionsBarProps> = ({ editor }) => {
                     />
                     <div className="blend-control__info">
                       <span className="blend-control__label">{label}</span>
-                      <span className="blend-control__value">{currentColor}</span>
-                    </div>                
+                      <span className="blend-control__value">
+                        {currentColor}
+                      </span>
+                    </div>
                     {isPickerOpen && (
                       <div className="blend-control__popover">
                         <SketchPicker
                           color={currentColor}
-                          onChange={(color: ColorResult) => applyColor(key, color, false)}
+                          onChange={(color: ColorResult) =>
+                            applyColor(key, color, false)
+                          }
                           onChangeComplete={(color: ColorResult) =>
                             applyColor(key, color, true)
                           }
@@ -210,10 +220,7 @@ const OptionsBar: React.FC<OptionsBarProps> = ({ editor }) => {
           </>
         );
       default:
-        return (
-          <>           
-          </>
-        );
+        return <></>;
     }
   };
 
