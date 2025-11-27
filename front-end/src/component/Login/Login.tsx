@@ -302,15 +302,9 @@ const Login: React.FC = () => {
           <button type="button" className="login-link" onClick={handleLogout}>
             로그아웃
           </button>
-        )}
-        <a href="/reset-password" className="login-link">
-          비밀번호를 잊으셨나요?
-        </a>
+        )}        
         <span className="login-modal__hint">
-          처음 이용하시나요?{" "}
-          <a href="/signup" className="login-link">
-            회원가입
-          </a>
+          간단한 로그인 시스템 구현
         </span>
       </footer>
     </ReactModal>
