@@ -58,68 +58,6 @@ const DocumentTabs: React.FC<DocumentTabsProps> = ({
     [scrollImageIntoView]
   );
 
-  const handleTabDragStart = useCallback(
-    (event: React.DragEvent<HTMLButtonElement>, index: number) => {
-      if (selectedItems.length < 2) {
-        event.preventDefault();
-        return;
-      }
-      event.dataTransfer.effectAllowed = "move";
-      event.dataTransfer.setData("text/plain", String(index));
-      setDraggingIndex(index);
-      setDragOverIndex(index);
-    },
-    [selectedItems.length]
-  );
-
-  const handleTabDragOver = useCallback(
-    (event: React.DragEvent<HTMLButtonElement>, index: number) => {
-      if (draggingIndex === null) {
-        return;
-      }
-      event.preventDefault();
-      event.dataTransfer.dropEffect = "move";
-      if (index !== dragOverIndex) {
-        setDragOverIndex(index);
-      }
-    },
-    [dragOverIndex, draggingIndex]
-  );
-
-  const handleTabDrop = useCallback(
-    (event: React.DragEvent<HTMLButtonElement>, index: number) => {
-      if (draggingIndex === null) {
-        return;
-      }
-      event.preventDefault();
-      if (draggingIndex !== index) {
-        uploadHistory.reorderSelectedItems(draggingIndex, index);
-      }
-      setDraggingIndex(null);
-      setDragOverIndex(null);
-    },
-    [draggingIndex, uploadHistory]
-  );
-
-  const handleTabDragLeave = useCallback(
-    (event: React.DragEvent<HTMLButtonElement>, index: number) => {
-      if (draggingIndex === null) {
-        return;
-      }
-      const nextTarget = event.relatedTarget as HTMLElement | null;
-      const isMovingInsideSameTab =
-        nextTarget?.closest(".document-tab") === event.currentTarget;
-      if (!isMovingInsideSameTab && dragOverIndex === index) {
-        setDragOverIndex(null);
-      }
-    },
-    [dragOverIndex, draggingIndex]
-  );
-
-  const handleTabDragEnd = useCallback(() => {
-    setDraggingIndex(null);
-    setDragOverIndex(null);
-  }, []);
 
   return (
     <div className="document-tabs">
@@ -141,11 +79,6 @@ const DocumentTabs: React.FC<DocumentTabsProps> = ({
             className={tabClassName}
             draggable={selectedItems.length > 1}
             onClick={() => handleTabClick(item.id)}
-            onDragStart={(event) => handleTabDragStart(event, index)}
-            onDragOver={(event) => handleTabDragOver(event, index)}
-            onDrop={(event) => handleTabDrop(event, index)}
-            onDragLeave={(event) => handleTabDragLeave(event, index)}
-            onDragEnd={handleTabDragEnd}
           >
             <span className="document-tab__name">{item.filename}</span>
             <span className="document-tab__meta">{item.mimetype}</span>
