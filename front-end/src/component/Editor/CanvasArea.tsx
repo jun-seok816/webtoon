@@ -522,8 +522,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
       );
 
       if (data.success) {
-        Editor.im_toast("Crop overlay 저장성공", "success");
-        cropStore.clear({ skipHistory: true, resetHistory: true });
+        Editor.im_toast("Crop overlay 저장성공", "success");        
       } else {
         Editor.im_toast(
           data.message ?? "Crop overlay 저장에 실패했습니다",
