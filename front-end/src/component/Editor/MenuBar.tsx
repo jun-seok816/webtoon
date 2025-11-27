@@ -275,7 +275,7 @@ const MenuBar: React.FC<MenuBarProps> = ({ editor }) => {
 
   return (
     <>
-      <nav className="menu-bar">
+      <nav className="menu-bar" data-intro-id="intro-menu">
         <div className="menu-bar__group">
           {menuItems.map((item) => {
             const onClick =

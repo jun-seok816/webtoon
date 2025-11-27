@@ -55,7 +55,7 @@ const RightPanels: React.FC<RightPanelsProps> = ({ editor }) => {
     };
 
   return (
-    <aside className="right-panels">
+    <aside className="right-panels" data-intro-id="intro-layer-list">
       <div className="panel-content">
         <div className="panel-stack">
           <div className="panel-section panel-section--list">

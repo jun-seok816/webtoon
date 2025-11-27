@@ -1,7 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import debounce from "lodash/debounce";
+import introJs from "intro.js";
 import { Editor } from "./Layout";
 import "./OptionsBar.scss";
+import "intro.js/introjs.css";
 import { AppLanguageCode } from "@shared/types/translate";
 import { SketchPicker } from "react-color";
 import type { ColorResult } from "react-color";
@@ -95,6 +97,54 @@ const OptionsBar: React.FC<OptionsBarProps> = ({ editor }) => {
   const handleRedo = useCallback(() => {
     cropStore.redo();
   }, [cropStore]);
+
+  const handleLearn = useCallback(() => {
+    const steps: introJs.Step[] = [
+      {
+        element: '[data-intro-id="intro-menu"]',
+        intro: "File로 업로드 내역을 열거나 Upload로 새 이미지를 추가합니다.",
+      },
+      {
+        element: '[data-intro-id="intro-auto-detect"]',
+        intro: "자동 탐지/번역으로 말풍선을 찾고 번역을 실행합니다.",
+      },
+      {
+        element: '[data-intro-id="intro-canvas-viewer"]',
+        intro: "오버레이를 드래그해 감지된 영역을 번역합니다.",
+      },
+      {
+        element: '[data-intro-id="intro-options"]',
+        intro: "원문/번역 언어와 배경·텍스트 색, 불투명도를 조정합니다.",
+      },
+      {
+        element: '[data-intro-id="intro-layer-list"]',
+        intro: "우측 리스트에서 말풍선 텍스트를 검수·수정하거나 삭제합니다.",
+      },
+    ];
+
+    const availableSteps = steps.filter((step) => {
+      if (!step.element) return true;
+      if (typeof step.element === "string") {
+        return Boolean(document.querySelector(step.element));
+      }
+      return step.element.isConnected;
+    });
+
+    if (availableSteps.length === 0) {
+      return;
+    }
+
+    introJs()
+      .setOptions({
+        steps: availableSteps as any,
+        nextLabel: "다음",
+        prevLabel: "이전",
+        doneLabel: "닫기",
+        hidePrev: true,
+        overlayOpacity: 0.6,
+      })
+      .start();
+  }, []);
 
   const renderToolOptions = () => {
     switch (activeTool) {
@@ -225,7 +275,7 @@ const OptionsBar: React.FC<OptionsBarProps> = ({ editor }) => {
   };
 
   return (
-    <div className="options-bar">
+    <div className="options-bar" data-intro-id="intro-options">
       <div className="options-title">{activeTool.toUpperCase()} TOOL</div>
       {renderToolOptions()}
       <div className="options-right">
@@ -251,7 +301,7 @@ const OptionsBar: React.FC<OptionsBarProps> = ({ editor }) => {
             <i className="bi bi-arrow-clockwise" aria-hidden="true" />
           </button>
         </div>
-        <button className="options-button">
+        <button className="options-button" type="button" onClick={handleLearn}>
           <i className="bi bi-question-circle" aria-hidden="true" /> Learn
         </button>
       </div>

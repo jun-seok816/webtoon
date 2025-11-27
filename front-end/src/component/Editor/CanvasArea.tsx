@@ -391,7 +391,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
                   cropStore.setOverlayText(
                     newOverlay.id,
                     translationRes.translatedText,
-                    {recordHistory:false}
+                    { recordHistory: false }
                   );
                 })
                 .catch((error) => {
@@ -522,7 +522,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
       );
 
       if (data.success) {
-        Editor.im_toast("Crop overlay 저장성공", "success");        
+        Editor.im_toast("Crop overlay 저장성공", "success");
       } else {
         Editor.im_toast(
           data.message ?? "Crop overlay 저장에 실패했습니다",
@@ -572,10 +572,11 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
         <div className="canvas-header__actions">
           <button
             type="button"
-            className="canvas-header__button"
+            className="canvas-header__button canvas-header__button--auto"
             onClick={() => {
               handleAutoDetect();
             }}
+            data-intro-id="intro-auto-detect"
             disabled={selectedItems.length === 0 || isRunningAuto}
           >
             {isRunningAuto ? "탐지 중..." : "자동 탐지/번역"}
@@ -600,13 +601,15 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
         <div className="canvas-wrapper">
           <div className="scroll-viewer">
             <div className="scroll-viewer__frame">
-              <div className="scroll-viewer__viewport" ref={scrollViewportRef}>
+              <div className="scroll-viewer__viewport" ref={scrollViewportRef} data-intro-id="intro-canvas-viewer">
                 {selectedItems.length === 0 ? (
                   <div className="scroll-viewer__empty-state">
                     업로드 내역에서 배치를 선택하면 미리보기가 표시됩니다.
                   </div>
                 ) : (
-                  <div className="scroll-viewer__image-stack">
+                  <div
+                    className="scroll-viewer__image-stack"                    
+                  >
                     {selectedItems.map((item) => (
                       <div
                         className="scroll-viewer__image-wrapper"
