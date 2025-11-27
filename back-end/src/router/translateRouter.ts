@@ -1,9 +1,16 @@
+import path from "path";
 import { Router, Request, Response } from "express";
-import { translate } from "@vitalets/google-translate-api";
+import { v2 as TranslateV2 } from "@google-cloud/translate";
 import type {
   TranslateRequestBody,
   TranslateResponseBody,
 } from "../../../shared/types/translate";
+
+const translateClient = new TranslateV2.Translate({
+  keyFilename:
+    process.env.GOOGLE_APPLICATION_CREDENTIALS ??
+    path.resolve(__dirname, "../../webtoon-477201-0f8b97380705.json"),
+});
 
 const DEFAULT_TARGET_LANG = "eng";
 
@@ -30,17 +37,41 @@ type TranslateJob = {
 
 type QueueItem = {
   payload: TranslateJob;
-  resolve: (value: Awaited<ReturnType<typeof translate>>) => void;
+  resolve: (value: TranslateResult) => void;
   reject: (reason?: unknown) => void;
 };
 
-const TRANSLATE_INTERVAL_MS = 15000;
+const TRANSLATE_INTERVAL_MS = 1000;
 const translateQueue: QueueItem[] = [];
 let isProcessingQueue = false;
 let lastInvocationTime = 0;
 
+type TranslateResult = {
+  translatedText: string;  
+};
+
 const sleep = (ms: number) =>
   new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+const performTranslation = async (
+  payload: TranslateJob
+): Promise<TranslateResult> => {
+  const [translation] = await translateClient.translate(
+    payload.text,
+    {
+      from: payload.from,
+      to: payload.to,
+    }
+  );
+
+  const translatedText = Array.isArray(translation)
+    ? translation[0] ?? ""
+    : translation ?? "";
+
+  return {
+    translatedText
+  };
+};
 
 const processQueue = async () => {
   if (isProcessingQueue) {
@@ -60,10 +91,7 @@ const processQueue = async () => {
       }
 
       try {
-        const result = await translate(job.payload.text, {
-          from: job.payload.from,
-          to: job.payload.to,
-        });
+        const result = await performTranslation(job.payload);
         lastInvocationTime = Date.now();
         job.resolve(result);
       } catch (err) {
@@ -80,14 +108,16 @@ const processQueue = async () => {
 };
 
 const enqueueTranslate = (payload: TranslateJob) =>
-  new Promise<Awaited<ReturnType<typeof translate>>>((resolve, reject) => {
+  new Promise<TranslateResult>((resolve, reject) => {
     translateQueue.push({ payload, resolve, reject });
     void processQueue();
   });
 
 const translateRouter = Router();
 
-translateRouter.use((req, res, next) => process._myApp.checkSession(req, res, next));
+translateRouter.use((req, res, next) =>
+  process._myApp.checkSession(req, res, next)
+);
 
 translateRouter.post(
   "/",
@@ -127,31 +157,18 @@ translateRouter.post(
 
       const responsePayload: TranslateResponseBody = {
         success: true,
-        translatedText: translation.text,
+        translatedText: translation.translatedText,
         originalText: text,
-        sourceLang:normalizedSource??"kor",          
+        sourceLang: normalizedSource ?? "kor",
         targetLang: normalizedTarget,
       };
 
       res.json(responsePayload);
     } catch (error) {
       console.error("[translate] 번역 처리 실패", error);
-      const code =
-        typeof error === "object" &&
-        error &&
-        "code" in error &&
-        typeof (error as { code?: string }).code === "string"
-          ? (error as { code: string }).code
-          : undefined;
-
-      const status = code === "BAD_REQUEST" ? 400 : 500;
-      res.status(status).json({
+      res.status(400).json({
         success: false,
-        message:
-          status === 400
-            ? "지원하지 않는 언어 코드입니다."
-            : "요청 과다로 인한 IP 차단, 번역API 호출 실패",
-        code,
+        message: "번역API 호출 실패",
       });
     }
   }

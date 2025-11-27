@@ -170,7 +170,7 @@ const CropOverlay: React.FC<CropOverlayProps> = ({ box, editor }) => {
           target={target}
           draggable
           resizable={false}
-          scalable={true}
+          scalable={false}
           rotatable={false}
           pinchable={false}
           edgeDraggable={false}

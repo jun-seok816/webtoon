@@ -8,8 +8,7 @@ export class EditorCropStore {
   private cropHistory: CropOverlayBox[][] = [];
   private cropHistoryIndex = 0;
   private readonly cropHistoryLimit = 50;
-  private sBox:CropOverlayBox|undefined;
-
+  private sBox: CropOverlayBox | undefined;
 
   constructor(private readonly notify: Notify) {
     this.initializeHistory();
@@ -19,7 +18,7 @@ export class EditorCropStore {
     return this.cropBoxes;
   }
 
-  public get selectBox(){
+  public get selectBox() {
     return this.sBox;
   }
 
@@ -34,7 +33,7 @@ export class EditorCropStore {
     this.notify();
   }
 
-  public setInintSelectBox(){
+  public setInintSelectBox() {
     this.sBox = undefined;
     this.notify();
   }
@@ -47,7 +46,7 @@ export class EditorCropStore {
     return this.cropHistoryIndex < this.cropHistory.length - 1;
   }
 
-  public initOverlay(boxs:CropOverlayBox[]){
+  public initOverlay(boxs: CropOverlayBox[]) {
     this.cropBoxes = boxs;
     this.notify();
   }
@@ -57,10 +56,16 @@ export class EditorCropStore {
       ...box,
       opacity: EditorToolsStore.normalizeOpacity(box.opacity),
     };
-    this.commitBoxes([...this.cropBoxes, normalizedOverlay]);
+    this.commitBoxes([...this.cropBoxes, normalizedOverlay], {
+      recordHistory: false,
+    });
   }
 
-  public setOverlayText(id: string, text: string) {
+  public setOverlayText(
+    id: string,
+    text: string,
+    options: { recordHistory?: boolean } = {}
+  ) {
     let updated = false;
     const nextBoxes = this.cropBoxes.map((box) => {
       if (box.id === id) {
@@ -70,7 +75,7 @@ export class EditorCropStore {
       return box;
     });
     if (updated) {
-      this.commitBoxes(nextBoxes);
+      this.commitBoxes(nextBoxes,options);
     }
   }
 
@@ -90,7 +95,13 @@ export class EditorCropStore {
       const nextY = this.normalizeNumericValue(nextBox.y, box.y);
       const nextWidth = this.normalizeDimension(nextBox.width, box.width);
       const nextHeight = this.normalizeDimension(nextBox.height, box.height);
-      return { ...box, x: nextX, y: nextY, width: nextWidth, height: nextHeight };
+      return {
+        ...box,
+        x: nextX,
+        y: nextY,
+        width: nextWidth,
+        height: nextHeight,
+      };
     });
 
     if (updated) {
@@ -127,7 +138,9 @@ export class EditorCropStore {
     }
   }
 
-  public clear(options: { skipHistory?: boolean; resetHistory?: boolean } = {}) {
+  public clear(
+    options: { skipHistory?: boolean; resetHistory?: boolean } = {}
+  ) {
     const skipHistory = options.skipHistory ?? false;
     const resetHistory = options.resetHistory ?? false;
     if (this.cropBoxes.length === 0 && !resetHistory) {
@@ -157,10 +170,10 @@ export class EditorCropStore {
     this.commitBoxes(this.cloneBoxes(snapshot), { recordHistory: false });
   }
 
-
-
   private normalizeNumericValue(value: number | undefined, fallback: number) {
-    return typeof value === "number" && Number.isFinite(value) ? value : fallback;
+    return typeof value === "number" && Number.isFinite(value)
+      ? value
+      : fallback;
   }
 
   private normalizeDimension(value: number | undefined, fallback: number) {
@@ -178,6 +191,7 @@ export class EditorCropStore {
   }
 
   private pushHistorySnapshot(boxes: CropOverlayBox[]) {
+    console.log("call pushHistorySnapshot");
     const historyUpToCurrent = this.cropHistory.slice(
       0,
       this.cropHistoryIndex + 1

@@ -8,8 +8,9 @@ interface RightPanelsProps {
 
 const RightPanels: React.FC<RightPanelsProps> = ({ editor }) => {
   const cropStore = editor.crops;
-  const cropLayerItems = cropStore.boxes ?? [];
+  const cropLayerItems = (cropStore.boxes ?? []).sort((a, b) => a.y - b.y);
   const scrollOverlayIntoView = useCallback((overlayId: string) => {
+    cropStore.setSelectBox(overlayId);
     const safeOverlayId =
       typeof CSS !== "undefined" && typeof CSS.escape === "function"
         ? CSS.escape(overlayId)
@@ -71,7 +72,11 @@ const RightPanels: React.FC<RightPanelsProps> = ({ editor }) => {
                     <li
                       key={layer.id}
                       className="layer-item"
-                      style={layer.id === cropStore.selectBox?.id?{"borderBottom":"1px solid white"}:{}}
+                      style={
+                        layer.id === cropStore.selectBox?.id
+                          ? { borderBottom: "1px solid white" }
+                          : {}
+                      }
                       onClick={() => scrollOverlayIntoView(layer.id)}
                     >
                       <div className="layer-meta">

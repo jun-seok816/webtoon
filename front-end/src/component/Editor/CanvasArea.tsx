@@ -390,7 +390,8 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ editor }) => {
                   }
                   cropStore.setOverlayText(
                     newOverlay.id,
-                    translationRes.translatedText
+                    translationRes.translatedText,
+                    {recordHistory:false}
                   );
                 })
                 .catch((error) => {
