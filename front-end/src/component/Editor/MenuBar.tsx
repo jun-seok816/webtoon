@@ -15,8 +15,8 @@ const FileUploadModal: React.FC<MenuBarProps> = ({ editor }) => {
   const loading: Loading | undefined = editor.loading;
   const uiStore = editor.ui;
   const selectedFiles = uiStore.selectedFiles;
-  const isUploading = uiStore.isUploading;
   const title = uiStore.uploadTitle;
+  const isUploading = uiStore.isUploading;
 
   const throttledRender = useMemo(() => {
     if (!upload) return null;
@@ -258,7 +258,7 @@ const MenuBar: React.FC<MenuBarProps> = ({ editor }) => {
   const uiStore = editor.ui;
   const isFileModalOpen = uiStore.isFileModalOpen;
   const isUploadHistoryOpen = uiStore.isUploadHistoryOpen;
-  const menuItems = ["File", "Edit", "Uploads"] as const;
+  const menuItems = ["File", "Upload"] as const;
 
   const handleFileMenuClick = () => {
     uiStore.openFileModal();
@@ -280,9 +280,9 @@ const MenuBar: React.FC<MenuBarProps> = ({ editor }) => {
           {menuItems.map((item) => {
             const onClick =
               item === "File"
-                ? handleFileMenuClick
-                : item === "Uploads"
                 ? handleUploadsMenuClick
+                : item === "Upload"
+                ? handleFileMenuClick
                 : undefined;
 
             return (
