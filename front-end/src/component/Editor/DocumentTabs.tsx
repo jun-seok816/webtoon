@@ -4,9 +4,7 @@ import type { Editor } from "./Layout";
 interface DocumentTabsProps {
   editor: Editor;
   scrollViewportRef: React.RefObject<HTMLDivElement | null>;
-  imageRefs: React.MutableRefObject<
-    Map<string | number, HTMLImageElement>
-  >;
+  imageRefs: React.MutableRefObject<Map<string | number, HTMLImageElement>>;
 }
 
 const DocumentTabs: React.FC<DocumentTabsProps> = ({
@@ -33,8 +31,10 @@ const DocumentTabs: React.FC<DocumentTabsProps> = ({
       if (!viewport || !imageElement) {
         return;
       }
-
-      const imageTop = imageElement.offsetTop;
+      const imageTop =
+        imageElement.getBoundingClientRect().top -
+        viewport.getBoundingClientRect().top +
+        viewport.scrollTop;
       const imageBottom = imageTop + imageElement.offsetHeight;
       const currentScrollTop = viewport.scrollTop;
       const viewportHeight = viewport.clientHeight;
@@ -58,7 +58,6 @@ const DocumentTabs: React.FC<DocumentTabsProps> = ({
     [scrollImageIntoView]
   );
 
-
   return (
     <div className="document-tabs">
       {selectedItems.map((item, index) => {
@@ -77,7 +76,6 @@ const DocumentTabs: React.FC<DocumentTabsProps> = ({
             key={item.id}
             type="button"
             className={tabClassName}
-            draggable={selectedItems.length > 1}
             onClick={() => handleTabClick(item.id)}
           >
             <span className="document-tab__name">{item.filename}</span>

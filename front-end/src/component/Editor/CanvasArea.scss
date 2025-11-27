@@ -271,7 +271,7 @@
 .scroll-viewer__image-wrapper {
   position: relative;
   display: inline-block;
-  margin: 0 auto 1.25rem;
+  margin: 0 !important;  
 }
 
 .scroll-viewer__image-wrapper:last-child {
