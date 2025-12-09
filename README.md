@@ -8,7 +8,7 @@
 - `shared` : 프런트엔드/백엔드에서 함께 쓰는 타입 및 유틸
 
 ## 빠른 시작
-1) 필요한 의존성 설치: 각각 `front-end`, `back-end` 폴더에서 `npm install`  
+1) 필요한 의존성 설치: `back-end` 폴더에서 `npm install`  
 2) 개발 서버 실행: `back-end`에서 `npm run start`
 3) 브라우저에서 편집기 UI 접속 후 이미지 업로드 → 크롭/번역 흐름 테스트
 
