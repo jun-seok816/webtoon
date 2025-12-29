@@ -19,6 +19,7 @@ import Db from "./db";
 dotenv.config();
 
 const lv_Db = new Db();
+const port = Number.parseInt(process.env.PORT ?? "", 10) || 9004;
 
 declare global {
   namespace NodeJS {
@@ -134,8 +135,8 @@ console.log(
 );
 
 const server = app
-  .listen(3003, () => {
-    console.log(`Example app listening on port ${3003}`);
+  .listen(port, "127.0.0.1", () => {
+    console.log(`Example app listening on port ${port}`);
   })
   .setTimeout(12000000);
 
