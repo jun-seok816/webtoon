@@ -4,7 +4,7 @@ import type {
   GetCropOverlaysResponse,
   SaveCropOverlaysRequest,
   SaveCropOverlaysResponse,
-} from "../../../shared/types/editorCrops";
+} from "@shared/types/editorCrops";
 
 type BatchOwnerRow = RowDataPacket & {
   id: number;

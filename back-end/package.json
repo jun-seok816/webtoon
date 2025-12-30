@@ -2,7 +2,8 @@
   "scripts": {
     "start": "nodemon --exec ./node_modules/.bin/ts-node ./src/web.ts",
     "pstart": "pm2 start ./dist/web.js --name tooniz --watch --max-memory-restart 9900M",
-    "build": "cross-env NODE_ENV=development webpack --config webpack.config.js"
+    "build": "cross-env NODE_ENV=development webpack --config webpack.config.js",
+    "build:ts": "tsc -b tsconfig.build.json"
   },
   "author": "hdr",
   "license": "ISC",
@@ -29,7 +30,6 @@
     "@types/bcryptjs": "^2.4.6",
     "@types/body-parser": "^1.19.6",
     "@types/cookie-parser": "^1.4.9",
-    "@types/dotenv": "^8.2.3",
     "@types/express": "^5.0.3",
     "@types/express-session": "^1.18.2",
     "@types/multer": "^1.4.12",

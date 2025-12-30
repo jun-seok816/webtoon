@@ -10,7 +10,7 @@ import type {
   UploadBatchDto,
   UploadListItemDto,
   UploadListResponseDto,
-} from "../../../shared/types/uploads";
+} from "@shared/types/uploads";
 import { readTestUploadBatches } from "../services/testUploads";
 
 type StoredFile = Express.Multer.File & { uniqueId?: string };

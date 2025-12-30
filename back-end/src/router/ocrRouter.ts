@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import Tesseract from "tesseract.js";
-import type { OcrRequestBody } from "../../../shared/types/ocr";
+import type { OcrRequestBody } from "@shared/types/ocr";
 
 const DEFAULT_LANGUAGE = "eng";
 

@@ -1,9 +1,6 @@
 import fs from "fs";
 import path from "path";
-import type {
-  UploadBatchDto,
-  UploadListItemDto,
-} from "../../../shared/types/uploads";
+import type { UploadBatchDto, UploadListItemDto } from "@shared/types/uploads";
 import { randomUUID } from "crypto";
 
 const TEST_UPLOAD_ROOT = path.join(__dirname, "../../data/test_uploads");

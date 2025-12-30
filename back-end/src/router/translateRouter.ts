@@ -4,7 +4,7 @@ import { v2 as TranslateV2 } from "@google-cloud/translate";
 import type {
   TranslateRequestBody,
   TranslateResponseBody,
-} from "../../../shared/types/translate";
+} from "@shared/types/translate";
 
 const translateClient = new TranslateV2.Translate({
   keyFilename:

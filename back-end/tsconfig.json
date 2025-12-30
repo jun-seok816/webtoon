@@ -137,7 +137,8 @@
 
     // https://www.typescriptlang.org/tsconfig#paths
     "paths": {
-      "@jsLib/*": ["src/*"]
+      "@jsLib/*": ["src/*"],
+      "@shared/*": ["../shared/*"]
     },
 
     "noImplicitThis": true /* Enable error reporting when `this` is given the type `any`. */,
