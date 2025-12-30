@@ -1,15 +1,15 @@
 {
   "compilerOptions": {
-    "composite": true,
-    "declaration": true,
-    "declarationMap": true,
-    "emitDeclarationOnly": true,
-    "outDir": "./dist",
-    "rootDir": ".",
-    "module": "commonjs",
-    "target": "ES2022",
-    "strict": true,
-    "skipLibCheck": true
+    "composite": true, // 프로젝트 레퍼런스/증분 빌드를 위한 설정.
+    "declaration": true, // .d.ts 파일 생성.
+    "declarationMap": true, // .d.ts.map 생성 (타입 정의 위치 추적).
+    "emitDeclarationOnly": true, // .d.ts만 출력하고 .js는 출력하지 않음.
+    "outDir": "./dist", // 타입 선언 출력 경로.
+    "rootDir": ".", // 출력 구조 계산 기준 루트.
+    "module": "commonjs", // 모듈 형식(타입 해석 메타에 사용).
+    "target": "ES2022", // 타입 라이브러리 선택 기준 타깃.
+    "strict": true, // 엄격한 타입 체크.
+    "skipLibCheck": true // 의존성 .d.ts는 검사하지 않음.
   },
-  "include": ["types/**/*.ts"]
+  "include": ["types/**/*.ts"] // shared 타입 소스만 포함.
 }
