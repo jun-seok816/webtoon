@@ -7,7 +7,6 @@ import "bootstrap-icons/font/bootstrap-icons.css";
 import "react-toastify/dist/ReactToastify.css";
 import "./index.scss";
 import Layout from "./component/Editor/Layout";
-import Google_get_access_token from "./component/Login/Google_get_access_token";
 import Login from "./component/Login/Login";
 
 export default function Root() {
@@ -15,10 +14,6 @@ export default function Root() {
     <Routes>
       <Route index element={<Layout />}></Route>
       <Route path="/login" element={<Login />}></Route>
-      <Route
-        path="/login/google_signup"
-        element={<Google_get_access_token />}
-      ></Route>
     </Routes>
   );
 }

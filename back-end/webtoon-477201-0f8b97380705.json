@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "webtoon-477201",
+  "private_key_id": "0f8b9738070510617b71d2c303fe88a8ae2ff1b8",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDQrxFAZjaB7IKc\n11xrSkhSj4K/uANjprcoUHFkfq+JtOzo5NPsoy7Iktp7f3wIM9KgWLZdGNLWLTUH\nEklpG7LKFfL9OmYfHKG0IvWttlYIpFsaxWrS+vU42jlQZyp2QU3ruLm7XxcQ9EE6\nZtIJaNaM4qYmgNYukks7mzacLwLoUuw0P6Kkg7Z5RwscLSAFxICn2ElXBNC3BscU\noryftf3MGhz3NvE7c7jLygNKLQ5aP7YVbCTtJ6KEE1yeugDmPdwPYglRERBDFVpI\nTM4GpeUJx/E7yqMF6GPmFdmMz+tUADVc3D7QGbcsTAOxlOIcrB6g8wejKelyrTR/\nDTtriu4zAgMBAAECggEAEZUr5RsCQl3SPshvJdkQkT2R53kSdrMldn+Z9jzYVHLK\njUWOd5SON2HBh9XyIOIg6oK0UXwVyOxD2LCD6pe7WjHm6HV4WkG4Jtcqj7QvuTMD\n5r8LJPNLyw+pSZV6VeljA9aWIOvo+R7jX2TUveyNOznzhDCnGy3B/1KGE5BrHyDf\n3Qzfcmfp7zRwGABBD7XrHQp6neXQyM8Iatj0kzOqNUFWIO9bn4+OoZOvPuzGwPDN\nioa7FBv41fiGuk5R19KzDSYhVrDlPLBbD4ZoywU5cDBGvd1Yau9SncRhqmS3HHrq\nxx9bxjaYUy4MiJ7nLWP36QVxD2D3XVk+kuwtf0nJkQKBgQDrUjwqflphl63EytS7\nAdBr956nznqYU6kU7PzCYwMfCrU+tqLQYDO1+z5g5Zjicys+OM5p4uZaxFTJoWJp\nw9ARcpuCX/4CkI30JLE6V0CvqmiIYqKX44e0k4v3PHSwBHkdMuzCidtC4lDSafG7\nxxpiiWWHk9SNonjv/kfaF2aSEQKBgQDjBZm2GxxXol4geWaf6VnEbFcKPRUGjy+e\nHekewUAVXXus9xiuP0A/1eKzmnUb2f7lQmvBgdWN6XPyPzY3/Iy0c3GQC2eS3dto\n5Tjb06YvmMv7xskZAayLkteM3WK2Cx7A+LtjQlMjLLeyIi4imqAlnG5xKbwrU+1m\naJzfK6u4AwKBgQCvUGfEnLfHB1KNTzMnU1WsaiFIETsiawmHrnsscslrgfW/kB9C\nMLm1tUUmuUaqRnUL+RRGrKVDMAue393Kv/guV3zlp5A85ubq4b8roL9vX/xax2ks\n0XVToazf96lTTTHSABOFZ2DztlnSON3AMLhGeugqFod/MXD6Ey4Cm/ZtkQKBgQC3\nrE1Lj62jnUMoZPBJysMM71aQexDqyKgO9kYo0tNlNcgdDaHTQGtb+lE7XGkJSps2\no0GJQuEjutBLGydjrpmsWYZ0szVuFr8wo9wXxqo68hV/M7p51+fg2MI6PtdhT6fn\nGpaJXRzkZYaNwaev6YhORbz5I3oRWArHgzYAPVXmPwKBgFq9RNbOfz5zjJDFc/wP\n4GhkmNQf0lWfs8PbWXc9M1TTW9Zb6wvZ7fOE66Nu/lE1M/z3sdIrb+4pMm4kHQs8\nFO5yMvFLOiyZhRdacu1Rgz/vk9oZ+cgUDGTPcTY9NXPQ6+1b5CDpoS6HjpLTOre1\nwfiC1PGcAADWFRbaTBTmRO++\n-----END PRIVATE KEY-----\n",
+  "client_email": "junseok@webtoon-477201.iam.gserviceaccount.com",
+  "client_id": "113191551364751278612",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/junseok%40webtoon-477201.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

@@ -8,7 +8,6 @@ export default function SignUp_select_btns(props: {
    * Create form to request access token from Google's OAuth 2.0 server.
    */
   function lf_oauthSignIn_google() {
-    // Google's OAuth 2.0 endpoint for requesting an access token
     var screenWidth = window.screen.width;
     var screenHeight = window.screen.height;
 
@@ -19,8 +18,11 @@ export default function SignUp_select_btns(props: {
     var left = (screenWidth - width) / 2;
     var top = (screenHeight - height) / 2;
 
+    var oauthStartUrl =
+      "/api/login/google/start?state=" + encodeURIComponent(props.p_state);
+
     var newWindow = window.open(
-      "",
+      oauthStartUrl,
       "_blank",
       "width=" +
         width +
@@ -32,37 +34,9 @@ export default function SignUp_select_btns(props: {
         top
     );
 
-    var oauth2Endpoint = "https://accounts.google.com/o/oauth2/v2/auth";
-
-    // Create <form> element to submit parameters to OAuth 2.0 endpoint.
-    var form = document.createElement("form");
-    form.setAttribute("method", "GET"); // Send as a GET request.
-    form.setAttribute("action", oauth2Endpoint);
-
-    // Parameters to pass to OAuth 2.0 endpoint.
-    var params = {
-      client_id:
-        "754426388809-i5q1nbh8s1ak9oq39hhjg7aol26s0ncs.apps.googleusercontent.com",
-      redirect_uri: `${window.origin}/login/google_signup`,
-      response_type: "token",
-      scope: "email profile",
-      state: props.p_state,
-    };
-
-    // Add form parameters as hidden input values.
-    for (var p in params) {
-      var input = document.createElement("input");
-      input.setAttribute("type", "hidden");
-      input.setAttribute("name", p);
-
-      //@ts-ignore
-      input.setAttribute("value", params[p]);
-      form.appendChild(input);
+    if (!newWindow) {
+      window.location.href = oauthStartUrl;
     }
-
-    // Add form to page and submit it to open the OAuth 2.0 endpoint.
-    newWindow?.document.body.appendChild(form);
-    form.submit();
   }
 
   return (

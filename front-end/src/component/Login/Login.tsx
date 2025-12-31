@@ -79,6 +79,9 @@ const Login: React.FC = () => {
     };
 
     const handleMessage = async (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) {
+        return;
+      }
       if (
         !event.data ||
         typeof event.data !== "object" ||
@@ -86,9 +89,11 @@ const Login: React.FC = () => {
       ) {
         return;
       }
-      const { type, accessToken } = event.data as {
+      const { type, accessToken, success, message } = event.data as {
         type?: string;
         accessToken?: string;
+        success?: boolean;
+        message?: string;
       };
       if (type === "google-login" && typeof accessToken === "string") {
         try {
@@ -98,6 +103,16 @@ const Login: React.FC = () => {
           console.error(error);
           setErrorMessage("구글 로그인에 실패했습니다.");
         }
+        return;
+      }
+
+      if (type === "google-login" && success) {
+        await refreshSession();
+        return;
+      }
+
+      if (type === "google-login" && success === false) {
+        setErrorMessage(message ?? "구글 로그인에 실패했습니다.");
       }
     };
 
