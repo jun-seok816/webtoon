@@ -73,7 +73,7 @@ ocrRouter.post("/", async (req, res) => {
         });
     }
     catch (error) {
-        console.error("[ocr] OCR 처리 실패", error);
+        console.log("[ocr] OCR 처리 실패", error);
         res.status(500).json({
             success: false,
             message: "이미지에서 텍스트를 추출하는 중 오류가 발생했습니다.",
