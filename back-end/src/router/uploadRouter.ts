@@ -3,7 +3,8 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { v4 as uuidv4 } from "uuid";
-import { readPsd } from "ag-psd";
+import { initializeCanvas, readPsd } from "ag-psd";
+import { createCanvas, ImageData as NapiImageData } from "@napi-rs/canvas";
 import sharp from "sharp";
 import { OkPacket, RowDataPacket } from "mysql2/promise";
 import type {
@@ -43,6 +44,19 @@ type UploadRow = RowDataPacket & {
 };
 
 const uploadRouter = Router();
+
+type DomImageData = any;
+
+const createImageData: (width: number, height: number) => DomImageData = (
+  width,
+  height
+) => new NapiImageData(width, height) as unknown as DomImageData;
+
+initializeCanvas(
+  createCanvas as unknown as (width: number, height: number) => HTMLCanvasElement,
+  undefined,
+  createImageData
+);
 
 const uploadRoot = path.join(__dirname, "../../data/uploads");
 const fsp = fs.promises;

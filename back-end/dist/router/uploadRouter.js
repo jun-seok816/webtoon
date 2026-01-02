@@ -9,9 +9,12 @@ const path_1 = __importDefault(require("path"));
 const fs_1 = __importDefault(require("fs"));
 const uuid_1 = require("uuid");
 const ag_psd_1 = require("ag-psd");
+const canvas_1 = require("@napi-rs/canvas");
 const sharp_1 = __importDefault(require("sharp"));
 const testUploads_1 = require("../services/testUploads");
 const uploadRouter = (0, express_1.Router)();
+const createImageData = (width, height) => new canvas_1.ImageData(width, height);
+(0, ag_psd_1.initializeCanvas)(canvas_1.createCanvas, undefined, createImageData);
 const uploadRoot = path_1.default.join(__dirname, "../../data/uploads");
 const fsp = fs_1.default.promises;
 const ensureUploadRoot = () => {
