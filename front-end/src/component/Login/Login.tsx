@@ -4,7 +4,7 @@ import React, {
   useMemo,
   useState,
 } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import ReactModal from "react-modal";
 import { Main } from "@jsLib/class/Main_class";
 import {
@@ -26,6 +26,7 @@ declare global {
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [main] = useState(() => new Main());
   const [loginStore] = useState(
     () => new LoginModalState(main.im_forceRender.bind(main))
@@ -70,6 +71,16 @@ const Login: React.FC = () => {
     },
     [loginStore, navigate]
   );
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const oauthStatus = params.get("oauth");
+    const oauthMessage = params.get("message");
+    if (oauthStatus === "error") {
+      setErrorMessage(oauthMessage ?? "구글 로그인에 실패했습니다.");
+      navigate("/login", { replace: true });
+    }
+  }, [location.search, navigate]);
 
   useEffect(() => {
     void refreshSession();

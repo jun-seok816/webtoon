@@ -53,46 +53,23 @@ const buildGoogleAuthUrl = (req: Request, oauthState: string) => {
   return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
 };
 
-const renderOAuthPopup = (
+const renderOAuth = (
   res: Response,
   payload: { success: boolean; message?: string }
 ) => {
-  const scriptPayload = JSON.stringify(payload);
-  res.setHeader("Content-Type", "text/html; charset=utf-8");
-  res.send(`<!doctype html>
-<html lang="ko">
-  <head>
-    <meta charset="utf-8" />
-    <title>Google 로그인</title>
-  </head>
-  <body>
-    <script>
-      (function () {
-        var payload = ${scriptPayload};
-        try {
-          if (window.opener && !window.opener.closed) {
-            if (payload.success && window.opener.globalCallback_login) {
-              window.opener.globalCallback_login();
-            }
-            window.opener.postMessage(
-              { type: "google-login", success: payload.success, message: payload.message },
-              window.location.origin
-            );
-            window.close();
-            return;
-          }
-        } catch (e) {}
-        if (payload.success) {
-          window.location.href = "/";
-        } else if (payload.message) {
-          document.body.innerText = payload.message;
-        } else {
-          document.body.innerText = "구글 로그인에 실패했습니다.";
-        }
-      })();
-    </script>
-  </body>
-</html>`);
+  const params = new URLSearchParams();
+  if (!payload.success) {
+    params.set("oauth", "error");
+    if (payload.message) {
+      params.set("message", payload.message);
+    }
+  }
+
+  const redirectTarget = params.toString()
+    ? `/login?${params.toString()}`
+    : "/login";
+
+  res.redirect(redirectTarget);
 };
 
 type GoogleUserProfile = {
@@ -339,7 +316,7 @@ loginRouter.get("/google/callback", async (req: Request, res: Response) => {
   try {
     const { clientId, clientSecret } = getGoogleClientConfig();
     if (!clientId || !clientSecret) {
-      renderOAuthPopup(res, {
+      renderOAuth(res, {
         success: false,
         message: "Google OAuth 환경변수가 설정되지 않았습니다.",
       });
@@ -350,7 +327,7 @@ loginRouter.get("/google/callback", async (req: Request, res: Response) => {
     const state = typeof req.query.state === "string" ? req.query.state : null;
 
     if (!code) {
-      renderOAuthPopup(res, {
+      renderOAuth(res, {
         success: false,
         message: "Google 인증 코드가 없습니다.",
       });
@@ -358,7 +335,7 @@ loginRouter.get("/google/callback", async (req: Request, res: Response) => {
     }
 
     if (!state || state !== req.session.oauthState) {
-      renderOAuthPopup(res, {
+      renderOAuth(res, {
         success: false,
         message: "OAuth state 검증에 실패했습니다.",
       });
@@ -383,7 +360,7 @@ loginRouter.get("/google/callback", async (req: Request, res: Response) => {
 
     const accessToken = tokenResponse.access_token;
     if (!accessToken) {
-      renderOAuthPopup(res, {
+      renderOAuth(res, {
         success: false,
         message: "Google 액세스 토큰을 가져오지 못했습니다.",
       });
@@ -407,13 +384,13 @@ loginRouter.get("/google/callback", async (req: Request, res: Response) => {
     req.session.oauthState = undefined;
     req.session.oauthIntent = undefined;
 
-    renderOAuthPopup(res, {
+    renderOAuth(res, {
       success: true,
       message: result.isNew ? "sign_up" : "login",
     });
   } catch (error) {
     console.error("[login] Google OAuth callback failed", error);
-    renderOAuthPopup(res, {
+    renderOAuth(res, {
       success: false,
       message: "구글 로그인 처리 중 오류가 발생했습니다.",
     });

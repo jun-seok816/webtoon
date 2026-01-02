@@ -35,7 +35,7 @@ const upload = (0, multer_1.default)({
     storage,
     limits: {
         files: 20,
-        fileSize: 20 * 1024 * 1024,
+        fileSize: 400 * 1024 * 1024,
     },
 });
 const shouldConvertPsd = (file) => {

@@ -20,6 +20,8 @@ declare module "express-session" {
         displayName?: string;
         provider?: "local" | "google" | "kakao" | "naver";
         picture_uri?: string;
+        oauthState?: string;
+        oauthIntent?: "login" | "sign_up";
     }
 }
 declare module "express-serve-static-core" {

@@ -8,35 +8,9 @@ export default function SignUp_select_btns(props: {
    * Create form to request access token from Google's OAuth 2.0 server.
    */
   function lf_oauthSignIn_google() {
-    var screenWidth = window.screen.width;
-    var screenHeight = window.screen.height;
-
-    var width = 650;
-    var height = 800;
-
-    // 창의 가운데 위치 계산
-    var left = (screenWidth - width) / 2;
-    var top = (screenHeight - height) / 2;
-
     var oauthStartUrl =
       "/api/login/google/start?state=" + encodeURIComponent(props.p_state);
-
-    var newWindow = window.open(
-      oauthStartUrl,
-      "_blank",
-      "width=" +
-        width +
-        ", height=" +
-        height +
-        ", left=" +
-        left +
-        ", top=" +
-        top
-    );
-
-    if (!newWindow) {
-      window.location.href = oauthStartUrl;
-    }
+    window.location.href = oauthStartUrl;
   }
 
   return (
