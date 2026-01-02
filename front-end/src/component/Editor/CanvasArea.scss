@@ -18,20 +18,18 @@
   border-bottom: 1px solid var(--line);
   overflow-x: auto;
   min-width: 0;
-  scrollbar-width: thin;
-  scrollbar-color: var(--accent-soft) rgba(255, 255, 255, 0.06);
 }
 
-.canvas-header::-webkit-scrollbar {
+.document-tabs::-webkit-scrollbar {
   height: 10px;
 }
 
-.canvas-header::-webkit-scrollbar-track {
+.document-tabs::-webkit-scrollbar-track {
   background: rgba(255, 255, 255, 0.06);
   border-radius: 999px;
 }
 
-.canvas-header::-webkit-scrollbar-thumb {
+.document-tabs::-webkit-scrollbar-thumb {
   background: linear-gradient(180deg, var(--accent), var(--accent-soft));
   border-radius: 999px;
 }
@@ -70,6 +68,9 @@
   display: flex;
   align-items: stretch;
   gap: 0.4rem;
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent-soft) rgba(255, 255, 255, 0.06);
+  overflow-y: auto;
 }
 
 .document-tab {
@@ -271,7 +272,7 @@
 .scroll-viewer__image-wrapper {
   position: relative;
   display: inline-block;
-  margin: 0 !important;  
+  margin: 0 !important;
 }
 
 .scroll-viewer__image-wrapper:last-child {

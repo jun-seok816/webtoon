@@ -4,6 +4,7 @@ import { ImageItem, Upload } from "@jsLib/class/Upload";
 import { Loading } from "@jsLib/class/Loading";
 import { Editor } from "./Layout";
 import UploadHistoryModal from "./UploadHistoryModal";
+import type { UploadBatchDto } from "@shared/types/uploads";
 import "./MenuBar.scss";
 
 type MenuBarProps = {
@@ -140,9 +141,43 @@ const FileUploadModal: React.FC<MenuBarProps> = ({ editor }) => {
         },
       });
 
-      if (response?.data?.success) {
+      const responseData = response?.data as
+        | {
+            success?: boolean;
+            batch?: {
+              id: number;
+              uuid: string;
+              title: string | null;
+              fileCount: number;
+              totalSize: number;
+            };
+            items?: UploadBatchDto["items"];
+          }
+        | undefined;
+
+      if (responseData?.success) {
         const count = appendedCount;
         Editor.im_toast(`${count}개 파일 업로드 완료`, "success");
+
+        if (
+          responseData.batch &&
+          Array.isArray(responseData.items) &&
+          responseData.items.length > 0
+        ) {
+          const batch: UploadBatchDto = {
+            id: responseData.batch.id,
+            uuid: responseData.batch.uuid,
+            title: responseData.batch.title ?? null,
+            status: "completed",
+            fileCount: responseData.batch.fileCount,
+            totalSize: responseData.batch.totalSize,
+            items: responseData.items,
+            isTest: false,
+          };
+          void editor.selectUploadBatch(batch, {
+            onClose: () => uiStore.closeFileModal(),
+          });
+        }
       } else {
         Editor.im_toast(
           "이미지 업로드가 완료되었는지 확인이 필요합니다.",

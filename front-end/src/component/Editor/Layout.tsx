@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import axios from "axios";
 import MenuBar from "./MenuBar";
 import ToolsPanel from "./ToolsPanel";
 import OptionsBar from "./OptionsBar";
@@ -20,6 +21,8 @@ import { EditorCropStore } from "./state/EditorCropStore";
 import { EditorUiStore } from "./state/EditorUiStore";
 import { EditorUploadHistoryStore } from "./state/EditorUploadHistoryStore";
 import { RoboFlow } from "@jsLib/class/RoboFlow";
+import type { UploadBatchDto } from "@shared/types/uploads";
+import type { GetCropOverlaysResponse } from "@shared/types/editorCrops";
 
 export class Editor extends Main {
   public readonly upload: Upload;
@@ -50,6 +53,42 @@ export class Editor extends Main {
     this.crops = new EditorCropStore(notify);
     this.ui = new EditorUiStore(notify);
     this.uploadHistory = new EditorUploadHistoryStore(notify);
+  }
+
+  public async selectUploadBatch(
+    batch: UploadBatchDto,
+    options?: { onClose?: () => void }
+  ) {
+    options?.onClose?.();
+    this.uploadHistory.setCurrentBatch(batch);
+    await this.loadBatchOverlays(batch);
+  }
+
+  public async handleBatchKeyDown(
+    event: React.KeyboardEvent<HTMLElement>,
+    batch: UploadBatchDto,
+    options?: { onClose?: () => void }
+  ) {
+    if (event.key !== "Enter" && event.key !== " ") {
+      return;
+    }
+
+    event.preventDefault();
+    await this.selectUploadBatch(batch, options);
+  }
+
+  private async loadBatchOverlays(batch: UploadBatchDto) {
+    try {
+      const { data: overlaysData } = await axios.get<GetCropOverlaysResponse>(
+        `/api/editor/crops/${batch.id}`
+      );
+      if (overlaysData.success) {
+        this.crops.clear({ skipHistory: true, resetHistory: true });
+        this.crops.initOverlay(overlaysData.overlays);
+      }
+    } catch (overlayError) {
+      console.error("[UploadHistory] overlay 불러오기 실패", overlayError);
+    }
   }
 }
 
