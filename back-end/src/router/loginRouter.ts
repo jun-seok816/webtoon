@@ -4,9 +4,14 @@ import express, { Request, Response } from "express";
 import { OkPacket, RowDataPacket } from "mysql2/promise";
 import { randomBytes } from "crypto";
 import dotenv from "dotenv";
+import path from "path";
 const loginRouter = express.Router();
 
-dotenv.config();
+dotenv.config(
+  {
+    path: path.resolve(__dirname, "../.env"),
+  }
+);
 
 async function regenerateSession(req: Request) {
   await new Promise<void>((resolve, reject) => {

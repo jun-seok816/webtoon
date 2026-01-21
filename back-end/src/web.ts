@@ -17,7 +17,9 @@ import Db from "./db";
 
 // .env 파일에서 환경 변수 로드
 dotenv.config(
-   {path:path.resolve(__dirname, '../env/.env')}
+  {
+    path: path.resolve(__dirname, "../.env"),
+  }
 );
 
 const lv_Db = new Db();
