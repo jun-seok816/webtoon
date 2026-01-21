@@ -141,6 +141,54 @@ const upsertGoogleUser = async ({
   return { userId, displayName: finalDisplayName, isNew: rows.length === 0 };
 };
 
+const isGuestAutoLoginEnabled = () => {
+  const flag = (process.env.AUTO_LOGIN_GUEST ?? "").toLowerCase();
+  return flag === "1" || flag === "true" || flag === "yes" || flag === "on";
+};
+
+const getGuestIdentity = () => {
+  const rawEmail = process.env.AUTO_LOGIN_GUEST_EMAIL ?? "demo@webtoon.local";
+  const rawDisplayName =
+    process.env.AUTO_LOGIN_GUEST_NAME ?? "Demo User";
+  return {
+    email: normalizeEmail(rawEmail),
+    displayName: rawDisplayName.trim() || "Demo User",
+  };
+};
+
+const ensureGuestUser = async () => {
+  const { email, displayName } = getGuestIdentity();
+  const db = process._myApp.db.promise();
+  const [rows] = await db.query<RowDataPacket[]>(
+    "SELECT id, display_name FROM users WHERE email = ? LIMIT 1",
+    [email]
+  );
+
+  if (rows.length === 0) {
+    const [result] = await db.query<OkPacket>(
+      `INSERT INTO users (
+        email,
+        password_hash,
+        display_name,
+        provider,
+        provider_id,
+        role,
+        status,
+        last_login_at
+      ) VALUES (?, NULL, ?, 'local', NULL, 'user', 'active', NOW())`,
+      [email, displayName]
+    );
+    return { userId: Number(result.insertId), email, displayName };
+  }
+
+  const userId = Number(rows[0].id);
+  const finalDisplayName = rows[0].display_name || displayName;
+  await db.query("UPDATE users SET last_login_at = NOW() WHERE id = ?", [
+    userId,
+  ]);
+  return { userId, email, displayName: finalDisplayName };
+};
+
 /**
  * POST /loginEmailCheck
  * @body { email: string }
@@ -266,7 +314,7 @@ loginRouter.post("/logout", (req: Request, res: Response) => {
 });
 
 
-loginRouter.get("/loginSession", (req, res) => {
+loginRouter.get("/loginSession", async (req, res) => {
   console.log(`session Data user_id: %o`, req.session.userId);
   if (req.session.userId) {
     res.json({
@@ -275,8 +323,31 @@ loginRouter.get("/loginSession", (req, res) => {
       displayName: req.session.displayName,
       provider: req.session.provider,
     });
-  } else {
+    return;
+  }
+
+  if (!isGuestAutoLoginEnabled()) {
     res.json({ loggedIn: false });
+    return;
+  }
+
+  try {
+    const guest = await ensureGuestUser();
+    await regenerateSession(req);
+    req.session.userId = guest.userId;
+    req.session.email = guest.email;
+    req.session.displayName = guest.displayName;
+    req.session.provider = "local";
+
+    res.json({
+      loggedIn: true,
+      email: guest.email,
+      displayName: guest.displayName,
+      provider: req.session.provider,
+    });
+  } catch (error) {
+    console.error("[loginSession] guest auto login failed", error);
+    res.status(500).json({ loggedIn: false, err: true });
   }
 });
 
