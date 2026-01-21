@@ -8,8 +8,11 @@ const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const express_1 = __importDefault(require("express"));
 const crypto_1 = require("crypto");
 const dotenv_1 = __importDefault(require("dotenv"));
+const path_1 = __importDefault(require("path"));
 const loginRouter = express_1.default.Router();
-dotenv_1.default.config();
+dotenv_1.default.config({
+    path: path_1.default.resolve(__dirname, "../.env"),
+});
 async function regenerateSession(req) {
     await new Promise((resolve, reject) => {
         req.session.regenerate((err) => {

@@ -20,7 +20,9 @@ const translateRouter_1 = __importDefault(require("./router/translateRouter"));
 const editorCropRouter_1 = __importDefault(require("./router/editorCropRouter"));
 const db_1 = __importDefault(require("./db"));
 // .env 파일에서 환경 변수 로드
-dotenv_1.default.config({ path: path_1.default.resolve(__dirname, '../env/.env') });
+dotenv_1.default.config({
+    path: path_1.default.resolve(__dirname, "../.env"),
+});
 const lv_Db = new db_1.default();
 const port = Number.parseInt(process.env.PORT ?? "", 10) || 9004;
 const gf_cs = (req, res, next) => {
