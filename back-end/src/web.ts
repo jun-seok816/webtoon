@@ -16,7 +16,9 @@ import editorCropRouter from "./router/editorCropRouter";
 import Db from "./db";
 
 // .env 파일에서 환경 변수 로드
-dotenv.config();
+dotenv.config(
+   {path:path.resolve(__dirname, '../env/.env')}
+);
 
 const lv_Db = new Db();
 const port = Number.parseInt(process.env.PORT ?? "", 10) || 9004;
