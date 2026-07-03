@@ -29,41 +29,6 @@
     display: flex;
     justify-content: flex-end;
     gap: 0.4rem;
-    grid-column: 3;
-  }
-
-  &__github {
-    width: 34px;
-    height: 34px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--muted);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 6px;
-    background: rgba(255, 255, 255, 0.03);
-    text-decoration: none;
-    transition: background 0.2s, border-color 0.2s, color 0.2s,
-      transform 0.1s;
-
-    i {
-      font-size: 1.05rem;
-    }
-
-    &:hover {
-      color: var(--text);
-      border-color: rgba(255, 255, 255, 0.18);
-      background: rgba(255, 255, 255, 0.08);
-    }
-
-    &:active {
-      transform: translateY(1px);
-    }
-
-    &:focus-visible {
-      outline: 1px solid var(--accent);
-      outline-offset: 2px;
-    }
   }
 }
 

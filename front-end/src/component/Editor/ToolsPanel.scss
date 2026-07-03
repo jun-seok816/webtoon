@@ -20,11 +20,25 @@
   color: var(--muted);
   border-radius: 8px;
   border: 1px solid transparent;
+  text-decoration: none;
 
   &.active {
     background: linear-gradient(135deg, rgba(90, 114, 242, 0.25), rgba(90, 114, 242, 0.05));
     border-color: rgba(90, 114, 242, 0.4);
     color: var(--accent-soft);
+  }
+
+  &--hidden {
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  &--github {
+    &:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.14);
+    }
   }
 
   &--logout {

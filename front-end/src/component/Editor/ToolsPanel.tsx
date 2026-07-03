@@ -44,13 +44,25 @@ const ToolsPanel: React.FC<ToolsPanelProps> = ({ editor }) => {
       {tools.map((tool) => (
         <button
           key={tool.id}
-          className={`tool-button ${activeTool === tool.id ? "active" : ""}`}
+          className={`tool-button ${
+            activeTool === tool.id ? "active" : ""
+          } ${tool.id === "crop" ? "tool-button--hidden" : ""}`}
           onClick={() => toolStore.setActiveTool(tool.id)}
           title={tool.label}
         >
           <i className={`bi ${tool.icon}`} aria-hidden="true" />
         </button>
       ))}
+      <a
+        className="tool-button tool-button--github"
+        href="https://github.com/jun-seok816/webtoon"
+        target="_blank"
+        rel="noreferrer"
+        aria-label="GitHub repository"
+        title="GitHub"
+      >
+        <i className="bi bi-github" aria-hidden="true" />
+      </a>
       <div className="tool-divider" />
 
       <button
