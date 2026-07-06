@@ -1,6 +1,6 @@
 # 웹툰 자동번역 모듈
 
-웹툰 이미지 또는 PSD 파일을 업로드하면 말풍선/텍스트 영역을 Crop하고, OCR로 원문을 추출한 뒤 Google Translation API로 번역해 편집 오버레이로 바로 검수·수정할 수 있도록 구성한 프로젝트입니다.  
+웹툰 이미지를 업로드하면 YOLO 객체 감지 모델로 말풍선·텍스트 영역을 자동으로 찾고, OCR로 원문을 추출한 뒤 Gemini 번역 API를 통해 번역합니다. 번역 결과는 편집 화면에서 바로 검수·수정할 수 있도록 구성했습니다
 프론트엔드는 React와 TypeScript로 구현하고, 백엔드는 Express와 MySQL로 사용자 세션, 업로드 배치, 편집 오버레이 데이터를 관리했습니다. 이미지 업로드와 리사이징은 multer·sharp, PSD 변환은 ag-psd, OCR은 Tesseract.js, 말풍선 자동 감지는 YOLO26 추론모델을 사용했습니다.
 
 ---
@@ -61,6 +61,14 @@ sequenceDiagram
 ---
 
 ## 시연 자료
+
+<img width="1152" height="648" alt="download (1)" src="https://github.com/user-attachments/assets/5445723f-d6b2-4e44-8b06-44ce24921a6b" />
+
+<img width="1152" height="648" alt="download" src="https://github.com/user-attachments/assets/72a9ce05-b961-45f3-8b37-e1aeac4548f0" />
+
+
+## 시연 사이트
+http://221.154.120.167:3002/
 
 
 ---
